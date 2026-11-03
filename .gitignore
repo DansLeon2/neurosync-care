@@ -1,0 +1,54 @@
+# Entornos y dependencias
+.venv/
+venv/
+node_modules/
+
+# Secretos y credenciales
+.env
+.env.*
+!.env.example
+*.pem
+!backend/app/acquisition/certs/emotiv_rootCA.pem
+*.key
+credentials*.json
+
+# Bases de datos locales con datos de sesiones (privadas)
+backend/data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Resultados exportados privados
+exports/
+resultados_privados/
+*.private.csv
+
+# Caches y temporales
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+*.log
+tmp/
+.tmp/
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/settings.json
+
+
+# Copia local previa a la revisión
+.codex-backups/
+*.tsbuildinfo
