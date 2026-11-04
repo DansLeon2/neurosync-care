@@ -10,12 +10,14 @@ import { NeuroReportPage } from './pages/NeuroReportPage';
 import { HardwarePage } from './pages/HardwarePage';
 import { useNeuroStream } from './hooks/useNeuroStream';
 import { useProtocol } from './hooks/useProtocol';
+import { useTheme } from './hooks/useTheme';
 import { api } from './services/api';
 import type { DataSource, NavTab } from './types/neuro';
 
 export const App: React.FC = () => {
   const { status, frame, history, activeSession, layout, wsConnected, logs, pushLog, refreshState, clearHistory } = useNeuroStream();
   const { protocol, error: protocolError, retry } = useProtocol();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [showStartModal, setShowStartModal] = useState(false);
   const [selectedReportSessionId, setSelectedReportSessionId] = useState<number | null>(null);
@@ -58,7 +60,7 @@ export const App: React.FC = () => {
   return <div className="app-shell">
     <a className="skip-link" href="#main">Ir al contenido</a>
     <Sidebar activeTab={activeTab} onSelectTab={navigate} status={status} activeSession={activeSession} />
-    <TopHeader status={status} activeSession={activeSession} wsConnected={wsConnected}
+    <TopHeader status={status} activeSession={activeSession} wsConnected={wsConnected} theme={theme} onToggleTheme={toggleTheme}
       onOpenStartSession={() => setShowStartModal(true)}
       onFinishSession={async () => { try { await finishSession(false); } catch { /* visible error */ } }} />
     <main id="main" className="app-main" tabIndex={-1}>

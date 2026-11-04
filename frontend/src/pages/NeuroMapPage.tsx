@@ -18,8 +18,8 @@ export const NeuroMapPage: React.FC<Props> = ({ status, frame, layout }) => {
         <circle cx="200" cy="200" r="166" fill="none" stroke="currentColor" opacity=".25" /><path d="M180 34 L200 12 L220 34" fill="none" stroke="currentColor" opacity=".4" />
         <text x="200" y="63" textAnchor="middle" fill="currentColor" fontSize="10">FRENTE</text>
         {layout?.sensors.map(sensor => <g key={sensor.id} transform={`translate(${200 + sensor.x * 166},${200 - sensor.y * 166})`}>
-          <circle r="23" fill={value(sensor.id) === null ? '#e5e7eb' : '#e4ddf5'} stroke={selected === sensor.id ? '#6d4bb5' : '#a8a2b7'} strokeWidth={selected === sensor.id ? 2 : 1} />
-          <text textAnchor="middle" dy="4" fill="#352c49" fontSize="12">{sensor.id}</text>
+          <circle r="23" className={`sensor-node${value(sensor.id) === null ? ' empty' : ''}${selected === sensor.id ? ' selected' : ''}`} />
+          <text textAnchor="middle" dy="4" className="sensor-label">{sensor.id}</text>
         </g>)}
       </svg><div><label className="field-label">Sensor<select value={selected} onChange={event => setSelected(event.target.value)}>{layout?.sensors.map(sensor => <option key={sensor.id}>{sensor.id}</option>)}</select></label>
         <h3>{selected || 'Sin sensor'}</h3><p>Contacto: {frame?.contact?.[selected] ?? '—'} / 4</p><p>Calidad: {frame?.quality?.[selected] ?? '—'} / 4</p>
