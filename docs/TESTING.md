@@ -1,10 +1,15 @@
 # Pruebas y validación
 
-## Base de comparación
+## Resultados y alcance
 
-Antes de modificar el código: 66 pruebas pytest, build de producción y 11 comprobaciones de navegador aprobadas. Capturas originales en la carpeta local ignorada .tmp/uiqa-c470d7f6. Un intento inicial restringido de pytest falló por permisos; al ejecutar con acceso a temporales pasó completa.
+| Verificación | Base anterior | Último resultado |
+| --- | --- | --- |
+| Backend pytest | 66 aprobadas | 76 aprobadas, incluidas las anteriores |
+| Modelos frontend | Sin suite propia | 4 aprobadas |
+| Navegador Chrome | 11 comprobaciones | 22 aprobadas |
+| TypeScript y producción | Correctos | Correctos; incluye comprobación de código sin uso |
 
-El equipo tiene nvm sin versión activa. Se usó un ejecutable Node instalado para la comprobación local, sin cambiar la configuración global. No es una dependencia de rutas personales dentro del proyecto.
+La auditoría inicial y recuperación están en [Historial](CHANGELOG.md). Las pruebas usan bases temporales: no se abrió la base de participantes. Las capturas del README proceden de la aplicación con datos sintéticos; no son mockups ni validación de hardware.
 
 ## Backend
 
@@ -14,11 +19,9 @@ Desde backend:
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-La suite usa bases temporales; no apunta a la base de participantes. Conserva test_api, test_simulator, test_emotiv y test_math_limits. test_evolution añade migración legacy idempotente, publicación entre hilos y snapshots, cola acotada, recuperación de escritura, creación simultánea de sesiones/fases, continuación de adquisición tras desconexión del cliente y contratos NeuroCode.
+Se conservan test_api, test_simulator, test_emotiv y test_math_limits. test_evolution cubre migración legacy idempotente con datos previos, publicación entre hilos/snapshots y cola acotada, recuperación de escritura, creación simultánea de sesión/fase, adquisición tras desconexión del cliente y contratos NeuroCode. Los límites usan un reloj inyectado; el piloto verifica tarea, fase, intentos, plazo, esfuerzo y CSV sin inventar EEG.
 
-Las pruebas de tiempo usan reloj inyectado para los límites. El piloto valida tarea, fase, corrección, número de intentos, esfuerzo opcional y exportación sin fabricar datos EEG.
-
-La versión instalada de Starlette/httpx produce una advertencia de deprecación de TestClient. No se reemplazó esa dependencia indirecta como parte de esta intervención.
+Un primer intento restringido falló por permisos de temporales; con acceso adecuado pasó la suite. La combinación instalada de Starlette/httpx produce una advertencia de deprecación de TestClient.
 
 ## Frontend
 
@@ -29,9 +32,11 @@ npm test
 npm run build
 ```
 
-node:test usa el compilador TypeScript ya instalado para probar modelos puros: búfer, cortes de señal/origen/unidades, valores de sensor sin relleno y distinción de instrucciones según el modelo. No imita React para afirmar pruebas de interfaz.
+node:test usa el compilador TypeScript existente para comprobar búfer circular, cortes de señal/origen/unidades, valores originales de sensores y distinción de instrucciones por modelo. No simula React para afirmar pruebas de interfaz. El build comprueba tipos, código sin uso y empaquetado.
 
-El build verifica tipos y empaquetado. El chunk 3D supera 500 kB sin comprimir y se carga bajo demanda; no se oculta esa advertencia elevando artificialmente el límite.
+Verificado con Python 3.12 y Node 24. En el equipo de desarrollo, nvm no tenía una versión activa; se utilizó un Node instalado sin cambiar la configuración global. Cada integrante debe activar su propio entorno.
+
+El módulo 3D supera 500 kB sin comprimir (aproximadamente 138 kB gzip). Se importa bajo demanda y se mantiene el aviso de Vite; no se eleva el límite para ocultarlo.
 
 ## Navegador real
 
@@ -41,30 +46,21 @@ Desde la raíz, con Chrome o Edge instalado:
 .\backend\.venv\Scripts\python.exe scripts/test_browser.py
 ```
 
-Con --basic se ejecuta el recorrido original. Por defecto se incluyen las comprobaciones ampliadas de browser_checks.py. El ejecutable de Node puede indicarse con NEUROSYNC_NODE_BIN cuando un gestor local no tiene una versión activa.
+--basic ejecuta el recorrido original. La suite completa incluye browser_checks.py. Si el gestor de Node no tiene una versión activa, NEUROSYNC_NODE_BIN permite indicar un ejecutable instalado.
 
-La prueba arranca Vite, backend y un perfil de navegador aislados en puertos libres, con SQLite dentro de .tmp/uiqa-*. Cierra los procesos que inició y conserva capturas y logs para revisión. Chrome usa renderizado de software en esta prueba para que 3D sea verificable sin depender de la GPU local.
+El script abre backend, Vite y un navegador oculto con puertos, perfil y SQLite aislados en .tmp/uiqa-*. Cierra todos los procesos que inició y conserva capturas/logs. Usa renderizado de software para verificar WebGL independientemente de la GPU local.
 
-Cobertura ampliada:
-- Escritorio y móvil de 375 px sin desbordamiento.
-- Filtros de banda, sensor, ventana y leyenda.
-- Calidad deficiente y pérdida/recuperación sin valores inventados.
-- Selección en 2D y clic real sobre un electrodo 3D, zoom, orientación y selección compartida.
-- Tema alternativo y preparación por modelo sin selección automática.
-- Fuente real bloqueada hasta completar preparación; sin confirmar hardware inexistente.
-- Navegación sin fases duplicadas; guía pausada/técnica conservadas.
-- Flujo matemático, Enter repetido, vencimiento, calma y resultado.
-- NeuroCode completo con reintento tras fallo de catálogo, esfuerzo opcional y exportación disponible.
-- Descarte temporal, historial de interrupción y desconexión del servidor.
-- WebGL indisponible: aviso y vista 2D.
-- Ausencia de excepciones JavaScript no controladas.
+Cobertura:
 
-## Comprobaciones manuales pendientes
+- Escritorio/móvil de 375 px, filtros, leyenda, calidad deficiente y pérdida/recuperación sin valores ficticios.
+- Selección 2D, clic sobre electrodo 3D, controles, inspector compartido, tema y alternativa 2D sin WebGL.
+- Tutorial por modelo sin selección automática y bloqueo del inicio real sin completar preparación.
+- Navegación sin duplicar fases; pausa/técnica conservadas; matemáticas con Enter repetido, vencimiento, calma y resultados.
+- NeuroCode completo con recuperación del catálogo tras bloquear su petición y esfuerzo opcional.
+- Historial, interrupción, descarte temporal, desconexión del servidor y ausencia de excepciones JavaScript no controladas.
 
-La automatización no sustituye probar el casco universitario ni observar usabilidad con participantes. Revisar colocación, higiene y adecuación por modelo con el responsable del equipo. Probar autorización/licencia reales, desconexión física, variación de contacto y confirmación de unidades.
+## Validación pendiente
 
-Verificar con participantes accesibilidad, textos y comodidad; validar el protocolo y el catálogo de tareas antes de investigar asociaciones. El piloto no estima productividad ni constituye un instrumento validado de estrés.
+Cortex está probado con servidor simulado; no se ha validado con casco físico ni con Virtual Brainwear real. Comprobar autorización/licencia de la cuenta universitaria, recepción y unidades, contacto, desconexión física y comodidad de colocación usando [la guía EMOTIV](EMOTIV_SETUP.md).
 
-## Resultado de esta intervención
-
-La ejecución final se registra en CHANGELOG.md y en el informe de entrega. Las capturas del README proceden de sesiones simuladas reales de la app; no son mockups ni validación de hardware.
+La automatización no sustituye probar accesibilidad, textos y comodidad con participantes ni validar el catálogo y protocolo de [Investigación](RESEARCH.md).

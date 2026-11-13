@@ -1,4 +1,3 @@
-import React from 'react';
 import type { RealtimeFrame } from '../../types/neuro';
 import type { SensorReading } from './sensorModel';
 import { sensorRegion } from './sensorModel';

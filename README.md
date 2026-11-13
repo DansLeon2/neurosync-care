@@ -82,7 +82,7 @@ Abre http://localhost:5173. API: http://127.0.0.1:8000/docs. Estado: http://127.
 
 Si PowerShell bloquea npm.ps1, utiliza npm.cmd con los mismos argumentos. Si solo se abre el frontend, la simulación no funcionará: también necesita el backend.
 
-Para probar: Nueva sesión → Simulador → elegir actividad → Comenzar. La demostración rápida está en Opciones de demostración. Para equipo real, consulta [EMOTIV_SETUP](docs/EMOTIV_SETUP.md). Los secretos se configuran en backend/.env y no se publican.
+Para probar: Nueva sesión → Simulador → elegir actividad → Comenzar. La demostración rápida está en Opciones de demostración. Para equipo real, consulta [la conexión EMOTIV](docs/EMOTIV_SETUP.md). El único ejemplo de configuración es [backend/.env.example](backend/.env.example); no hace falta para usar el simulador.
 
 ## Comprobar
 
@@ -107,14 +107,17 @@ La prueba de navegador usa procesos, puertos y SQLite aislados. [Cobertura y res
 
 ## Datos, compatibilidad y límites
 
-Las bases existentes no se recrean. Al iniciar se añaden las columnas/tablas necesarias para NeuroCode; las sesiones anteriores se conservan como MATH. Guarda una copia de tu SQLite, con el backend detenido, antes de actualizar un equipo con datos de investigación.
-
-El guardado en historial empieza desmarcado. Las sesiones temporales también usan SQLite, quedan fuera del historial y se descartan al salir de Resultados o al reiniciar el backend. Cerrar la pestaña sin conexión puede dejar esos datos hasta el siguiente arranque. Los CSV descargados son copias independientes.
-
-La API está pensada para un único proceso local y una sesión activa, sin autenticación multiusuario. El EEG crudo y las métricas afectivas no se solicitan. La integración física y los protocolos de investigación requieren validación con el equipo universitario.
-
-Los patrones del simulador son ficticios. Las estadísticas describen ventanas agregadas, no los extremos ni la desviación de muestras EEG originales. No se deducen causalidad, emociones ni competencia personal.
+La aplicación es local, con una sesión activa y sin autenticación multiusuario. Las migraciones conservan las sesiones existentes; antes de actualizar, respalda SQLite con el backend detenido. Consulta [compatibilidad](docs/ARCHITECTURE.md) y [retención de datos y límites científicos](docs/RESEARCH.md). La conexión física sigue pendiente de validación universitaria.
 
 ## Documentación
 
-Empieza por el [índice](docs/INDEX.md): guía de usuario, preparación EMOTIV, arquitectura, protocolo, piloto NeuroCode, limitaciones, pruebas y cambios de esta intervención.
+Cada tema tiene una única guía; los detalles se enlazan desde las demás.
+
+| Necesito… | Documento |
+| --- | --- |
+| Realizar una sesión y usar las visualizaciones | [Guía de usuario](docs/USER_GUIDE.md) |
+| Conectar el casco, configurar Cortex o resolver errores | [Conexión EMOTIV](docs/EMOTIV_SETUP.md) |
+| Entender servicios, contratos y migraciones | [Arquitectura](docs/ARCHITECTURE.md) |
+| Revisar protocolo, NeuroCode, privacidad y límites científicos | [Investigación](docs/RESEARCH.md) |
+| Repetir verificaciones y consultar sus resultados | [Pruebas](docs/TESTING.md) |
+| Revisar auditoría, decisiones e historial de cambios | [Historial](docs/CHANGELOG.md) |

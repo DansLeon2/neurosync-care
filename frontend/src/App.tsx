@@ -12,7 +12,7 @@ import { useNeuroStream } from './hooks/useNeuroStream';
 import { useProtocol } from './hooks/useProtocol';
 import { useTheme } from './hooks/useTheme';
 import { api } from './services/api';
-import type { DataSource, NavTab } from './types/neuro';
+import type { NavTab } from './types/neuro';
 
 export const App: React.FC = () => {
   const { status, activeSession, layout, wsConnected, logs, pushLog, refreshState, clearHistory } = useNeuroStream();

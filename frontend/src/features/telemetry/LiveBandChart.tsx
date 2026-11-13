@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { BandKey, HistoryPoint } from '../../types/neuro';
 import { BAND_META } from '../../utils/format';
 import { niceMax, fmtValue, linearTicks } from '../../components/charts/chartUtils';

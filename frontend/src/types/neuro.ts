@@ -122,7 +122,6 @@ export interface HistoryPoint {
   pow_unit: string | null;
   pow: RealtimeFrame['pow'];
   bands: Record<BandKey, number | null>;
-  channels: Record<string, number | null>;
   overall_quality: number | null;
 }
 

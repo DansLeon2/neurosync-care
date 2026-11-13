@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { DataSource, SourceStatus } from '../../types/neuro';
 import { useTelemetry } from '../telemetry/useTelemetry';
 import { MODEL_GUIDES, MODEL_LABELS, PREPARATION_STEPS, modelInstructions, type HeadsetModel } from './preparationContent';

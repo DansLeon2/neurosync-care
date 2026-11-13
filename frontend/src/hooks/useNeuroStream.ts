@@ -3,7 +3,6 @@ import { api } from '../services/api';
 import { config } from '../services/config';
 import { telemetry } from '../features/telemetry/streamStore';
 import type { SessionOut, SourceStatus, SensorLayout, RealtimeFrame } from '../types/neuro';
-export type { HistoryPoint } from '../types/neuro';
 
 export interface LogEntry {
   id: string; time: string;

@@ -30,7 +30,7 @@ class ConnectionState(StrEnum):
 
 
 class IntegrationState(StrEnum):
-    """Estado de la integración con EMOTIV Cortex (ver docs/EMOTIV_INTEGRATION.md)."""
+    """Estado de la integración con EMOTIV Cortex (ver docs/EMOTIV_SETUP.md)."""
 
     NOT_APPLICABLE = "NOT_APPLICABLE"
     CONNECTING = "CONNECTING"

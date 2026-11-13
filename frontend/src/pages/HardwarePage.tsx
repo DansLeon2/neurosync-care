@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import type { DataSource, RealtimeFrame, SensorLayout, SessionOut, SimulatorConfig, SimulatorScenario, SourceStatus } from '../types/neuro';
+import type { DataSource, SensorLayout, SessionOut, SimulatorConfig, SimulatorScenario, SourceStatus } from '../types/neuro';
 import { formatSourceLabel } from '../utils/format';
 import { useTelemetry } from '../features/telemetry/useTelemetry';
 import { DevicePreparation } from '../features/session/DevicePreparation';

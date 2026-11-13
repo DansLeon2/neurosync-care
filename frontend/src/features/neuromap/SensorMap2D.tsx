@@ -1,4 +1,3 @@
-import React from 'react';
 import type { SensorReading } from './sensorModel';
 interface Props { readings: SensorReading[]; selected: string; onSelect: (id: string) => void; showSensors?: boolean; }
 export function SensorMap2D({ readings, selected, onSelect, showSensors = true }: Props) {

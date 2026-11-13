@@ -1,6 +1,6 @@
 """Adaptador ``EmotivCortexSource`` para la API Cortex de EMOTIV (JSON-RPC sobre WebSocket seguro).
 
-ORIGEN DEL CÓDIGO (ver docs/EMOTIV_INTEGRATION.md)
+ORIGEN DEL CÓDIGO (ver docs/EMOTIV_SETUP.md)
 --------------------------------------------------
 * Del ejemplo oficial https://github.com/Emotiv/cortex-example (licencia MIT, © 2020 EMOTIV),
   archivo ``python/cortex.py``, solo se reutilizan los **patrones de protocolo**: orden de

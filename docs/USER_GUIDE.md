@@ -41,7 +41,7 @@ Si WebGL falla, aparece un mensaje y vuelve la vista 2D. El cerebro interior y l
 
 El informe conserva las gráficas de fases, evolución y tensión subjetiva. Los valores EEG, las respuestas y las autoevaluaciones están separados. NeuroCode añade intentos, tareas resueltas/no resueltas y tiempo desde inicio de fase; no mide productividad.
 
-Puedes imprimir y descargar los CSV. Una sesión temporal queda fuera del historial; salir de Resultados solicita su descarte. Si se cierra la pestaña o se pierde la red, puede permanecer temporalmente en SQLite hasta reiniciar el backend. Los CSV descargados no se eliminan al borrar una sesión.
+Puedes imprimir y descargar los CSV. Una sesión temporal queda fuera del historial; salir de Resultados solicita su descarte. Consulta [la política de retención y los límites científicos](RESEARCH.md) antes de registrar participantes o compartir resultados.
 
 ## Si no hay señal
 

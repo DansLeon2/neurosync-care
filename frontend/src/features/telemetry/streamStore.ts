@@ -25,14 +25,14 @@ export const telemetry = {
     frame = value;
     buffer.push({ seq: value.seq, timestamp: value.timestamp, source: value.source, pow_unit: value.pow_unit,
       pow: value.pow, bands: Object.fromEntries(bands.map(band => [band, computeBandAverage(value, band)])) as Record<BandKey, number | null>,
-      channels: {}, overall_quality: value.overall_quality });
+      overall_quality: value.overall_quality });
     // Se guardan TODOS los fotogramas recibidos; solo se agrupan notificaciones de UI.
     if (timer === undefined) timer = setTimeout(publish, 125);
   },
   gap() {
     frame = null;
     buffer.push({ seq: -1, timestamp: new Date().toISOString(), source: source ?? 'DISCONNECTED', pow_unit: null,
-      pow: {}, bands: { theta: null, alpha: null, low_beta: null, high_beta: null, gamma: null }, channels: {}, overall_quality: null });
+      pow: {}, bands: { theta: null, alpha: null, low_beta: null, high_beta: null, gamma: null }, overall_quality: null });
     if (timer !== undefined) clearTimeout(timer);
     publish();
   },

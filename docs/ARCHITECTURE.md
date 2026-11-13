@@ -57,6 +57,15 @@ GET /api/protocol conserva phases y math y añade activities. El registro de act
 
 CODING es una extensión aditiva. El piloto vincula una tarea del catálogo a Phase.detail y comprueba tipo de fase, plazo, límites de intento y corrección en el servidor. No registra teclas ni contenido externo.
 
+| Contrato NeuroCode | Contenido |
+| --- | --- |
+| SessionCreate / SessionOut | `activity_kind`: MATH por defecto o CODING |
+| PhaseKind / ReportMoment | Valores aditivos CODING y POST_CODING |
+| GET /api/coding/tasks | Catálogo versionado sin respuestas esperadas |
+| POST /api/coding/answers | `session_id`, `task_id`, `choice`; exige fase, tarea, plazo e intento válidos |
+| SessionDetail / SessionSummary | `coding_answers` / `coding` con intentos y desempeño |
+| CSV | `dataset=coding`; `effort` añadido al final de autoevaluaciones |
+
 Los instantes de inicio y fin siguen en session_phases. Los siete momentos del protocolo habitual se presentan como cuatro pasos de usuario. La finalización guiada produce COMPLETED; detener produce ABORTED. Terminar una fase no garantiza que se resolviera su tarea.
 
 No existe un planificador de cierre de fases tras abandonar completamente el navegador. El servidor rechaza respuestas matemáticas/de código fuera de plazo; al reiniciar cierra sesiones huérfanas y purga temporales conforme a la política existente.
@@ -84,6 +93,4 @@ create_all crea tablas ausentes; la migración inspecciona columnas y añade sol
 
 La reversión de Git no elimina estas columnas ni las tareas nuevas. Una versión antigua no interpreta CODING: conserva copia de la base previa si necesitas volver al software anterior. No se ejecutan migraciones destructivas de downgrade.
 
-## Límites estadísticos
-
-Los estadísticos EEG actuales describen medias de ventana por sensor. Ventanas parciales tienen el mismo peso; no se reconstruye variabilidad de muestras originales. No se deducen emociones, estrés clínico ni causalidad. Las métricas de respuesta y autoevaluaciones se mantienen separadas del EEG.
+La interpretación del registro, privacidad y límites estadísticos se documenta exclusivamente en [Investigación](RESEARCH.md). El procedimiento y los detalles de Cortex están en [Conexión EMOTIV](EMOTIV_SETUP.md).

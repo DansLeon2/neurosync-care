@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { BandKey, SensorLayout, SourceStatus } from '../../types/neuro';
 import type { LogEntry } from '../../hooks/useNeuroStream';
 import { useTelemetry } from './useTelemetry';
