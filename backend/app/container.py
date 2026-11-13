@@ -11,6 +11,7 @@ from app.database.core import SessionFactory, init_db, make_engine, make_session
 from app.services.acquisition_service import AcquisitionService, SourceFactory
 from app.services.hub import StreamHub
 from app.services.math_service import MathService
+from app.services.coding_service import CodingService
 from app.services.pipeline import Pipeline
 from app.services.recorder import MeasurementRecorder
 from app.services.report_service import ReportService
@@ -28,6 +29,7 @@ class Container:
     acquisition: AcquisitionService
     sessions: SessionService
     math: MathService
+    coding: CodingService
     reports: ReportService
 
 
@@ -49,6 +51,7 @@ def build_container(settings: Settings, emotiv_factory: SourceFactory | None = N
         acquisition=acquisition,
         sessions=SessionService(factory, recorder, pipeline, acquisition, hub),
         math=MathService(factory),
+        coding=CodingService(factory),
         reports=ReportService(factory, settings),
     )
 

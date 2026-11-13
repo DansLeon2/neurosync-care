@@ -1,5 +1,9 @@
 # Limitaciones Científicas, Metodológicas y Éticas
 
+La ampliación 3D es una ilustración propia de cabeza y cerebro, con sensores proyectados sobre una superficie craneal aproximada. No representa anatomía individual ni reconstrucción de fuentes. El color y los valores 2D/3D usan el mismo contrato. El modo automático de potencia normaliza entre cero y el máximo actual del montaje, explicado en la leyenda; se puede fijar la escala.
+
+NeuroCode registra respuestas a tareas controladas, intentos y tiempo desde inicio de fase. Las autoevaluaciones de tensión/esfuerzo son subjetivas y se guardan separadas del EEG. No se genera una puntuación de productividad ni una inferencia causal. Véase [la propuesta de investigación](NEUROCODE_PROPOSAL.md).
+
 ## 1. Propósito No Médico
 
 **NeuroSync Care** es una plataforma experimental universitaria de biofeedback y autorregulación desarrollada en Cuenca, Ecuador.

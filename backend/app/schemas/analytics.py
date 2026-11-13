@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from app.schemas.coding import CodingStats
+
 from datetime import datetime
 
 from pydantic import BaseModel, Field
@@ -64,6 +66,7 @@ class SelfReportSummary(BaseModel):
     tension: int
     difficulty: int | None
     comfort: int | None
+    effort: int | None = None
     timestamp: datetime
 
 
@@ -85,6 +88,7 @@ class SessionSummary(BaseModel):
     total_measurement_rows: int
     phases: list[PhaseStats]
     math: MathStats | None
+    coding: CodingStats | None = None
     self_reports: list[SelfReportSummary]
     tension_changes: list[TensionChange]
     events_count: int

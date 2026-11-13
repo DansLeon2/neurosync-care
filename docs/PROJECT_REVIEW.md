@@ -1,5 +1,7 @@
 # Auditoría y mejoras
 
+> Revisión histórica de la primera simplificación (noviembre de 2026). Para el estado actual, consulta [el índice](INDEX.md) y [la auditoría incremental](AUDIT_2026-11.md).
+
 ## Problemas confirmados y cambios
 
 | Hallazgo | Cambio |

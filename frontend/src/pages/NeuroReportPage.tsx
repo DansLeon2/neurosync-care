@@ -10,7 +10,7 @@ import { TensionChart } from '../components/charts/TensionChart';
 
 interface Props { selectedSessionId: number | null; onSelectSessionId: (id: number | null) => void; temporarySessionId: number | null; onCloseTemporary: () => void; }
 
-const PHASE_KINDS: PhaseKind[] = ['BASELINE', 'MATH', 'REGULATION'];
+const PHASE_KINDS: PhaseKind[] = ['BASELINE', 'MATH', 'CODING', 'REGULATION'];
 const signed = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
 
 export const NeuroReportPage: React.FC<Props> = ({ selectedSessionId, onSelectSessionId, temporarySessionId, onCloseTemporary }) => {
@@ -85,7 +85,7 @@ export const NeuroReportPage: React.FC<Props> = ({ selectedSessionId, onSelectSe
   const finalChange = summary?.tension_changes.find(change => change.from_moment === 'INITIAL' && change.to_moment === 'FINAL');
   const math = summary?.math ?? null;
   const labelA = PHASE_SHORT[phaseA], labelB = PHASE_SHORT[phaseB];
-  const hasWellbeingExtras = summary?.self_reports.some(r => r.difficulty !== null || r.comfort !== null) ?? false;
+  const hasWellbeingExtras = summary?.self_reports.some(r => r.difficulty !== null || r.comfort !== null || r.effort !== null) ?? false;
 
   return <div className="workspace report-workspace">
     <div className="page-title"><span className="eyebrow">Resultados</span><h1>Tu sesión, en perspectiva.</h1><p>Un resumen de tus respuestas y de los datos disponibles.</p></div>
@@ -110,7 +110,8 @@ export const NeuroReportPage: React.FC<Props> = ({ selectedSessionId, onSelectSe
           <div className="kpi"><span>Tiempo medio de respuesta</span><strong>{math.mean_response_time_ms == null ? '—' : (math.mean_response_time_ms / 1000).toFixed(1) + ' s'}</strong></div>
           <div className="kpi"><span>Mediana de respuesta</span><strong>{math.median_response_time_ms == null ? '—' : (math.median_response_time_ms / 1000).toFixed(1) + ' s'}</strong></div>
         </div>}
-        <p className="muted">Aciertos = correctas / operaciones enviadas, incluidas las omitidas. El cambio de tensión se expresa en puntos de 0 a 10, según tus respuestas.</p>
+        {summary.coding && <div className="kpi-row"><div className="kpi"><span>Tareas de código resueltas</span><strong>{summary.coding.n_completed} / {summary.coding.n_tasks}</strong></div><div className="kpi"><span>Intentos registrados</span><strong>{summary.coding.n_attempts}</strong></div><div className="kpi"><span>Primera respuesta correcta desde inicio de fase</span><strong>{summary.coding.first_correct_ms === null ? '—' : (summary.coding.first_correct_ms / 1000).toFixed(1) + ' s'}</strong></div></div>}
+        <p className="muted">Aciertos = correctas / operaciones enviadas, incluidas las omitidas. El cambio de tensión se expresa en puntos de 0 a 10, según tus respuestas. El piloto de código registra corrección e intentos; no calcula productividad ni ejecuta pruebas de software.</p>
       </section>
 
       <section className="panel"><h2>Cómo describiste la experiencia</h2>
@@ -119,8 +120,8 @@ export const NeuroReportPage: React.FC<Props> = ({ selectedSessionId, onSelectSe
           {summary.tension_changes.length > 0 && <ul className="chart-legend" style={{ marginTop: 16 }}>
             {summary.tension_changes.map(change => <li key={change.label}><strong>{change.label}:</strong> {signed(change.change)} {Math.abs(change.change) === 1 ? 'punto' : 'puntos'}</li>)}
           </ul>}
-          {hasWellbeingExtras && <div className="table-scroll"><table><thead><tr><th>Momento</th><th>Tensión</th><th>Dificultad</th><th>Comodidad</th></tr></thead>
-            <tbody>{summary.self_reports.map((r, i) => <tr key={i}><td>{MOMENT_SHORT[r.moment] ?? r.moment}</td><td>{r.tension} / 10</td><td>{r.difficulty ?? '—'}</td><td>{r.comfort ?? '—'}</td></tr>)}</tbody></table></div>}
+          {hasWellbeingExtras && <div className="table-scroll"><table><thead><tr><th>Momento</th><th>Tensión</th><th>Dificultad</th><th>Esfuerzo</th><th>Comodidad</th></tr></thead>
+            <tbody>{summary.self_reports.map((r, i) => <tr key={i}><td>{MOMENT_SHORT[r.moment] ?? r.moment}</td><td>{r.tension} / 10</td><td>{r.difficulty ?? '—'}</td><td>{r.effort ?? '—'}</td><td>{r.comfort ?? '—'}</td></tr>)}</tbody></table></div>}
         </> : <p>No se registraron autoevaluaciones.</p>}
         <p className="muted">Estos valores son percepciones personales. No se deducen del EEG.</p>
       </section>
@@ -168,7 +169,7 @@ export const NeuroReportPage: React.FC<Props> = ({ selectedSessionId, onSelectSe
       </section>
 
       <div className="panel no-print"><div className="section-top"><h2>Conservar una copia</h2><button className="button subtle" onClick={() => window.print()}>Imprimir</button></div>
-        <div className="actions">{([['summary', 'Resumen CSV'], ['answers', 'Respuestas CSV'], ['self_reports', 'Autoevaluaciones CSV'], ['measurements', 'Mediciones CSV']] as const).map(([dataset, label]) => <a className="button subtle" key={dataset} href={api.getExportUrl(summary.session_id, dataset)} download>{label}</a>)}</div>
+        <div className="actions">{([['summary', 'Resumen CSV'], ['answers', 'Respuestas CSV'], ['self_reports', 'Autoevaluaciones CSV'], ['measurements', 'Mediciones CSV']] as const).map(([dataset, label]) => <a className="button subtle" key={dataset} href={api.getExportUrl(summary.session_id, dataset)} download>{label}</a>)}{summary.phases.some(phase => phase.kind === 'CODING') && <a className="button subtle" href={api.getExportUrl(summary.session_id, 'coding')} download>NeuroCode CSV</a>}</div>
       </div>
     </>}
     {sessions.length > 0 && <details className="technical-details no-print"><summary>Administrar historial</summary><div className="actions">

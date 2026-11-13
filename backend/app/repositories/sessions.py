@@ -16,7 +16,7 @@ class SessionRepository:
         self.db = db
 
     # ---- sesiones
-    def create(self, *, source: str, consent: bool, device_model: str | None, test_mode: bool, now: datetime) -> SessionRow:
+    def create(self, *, source: str, consent: bool, device_model: str | None, test_mode: bool, now: datetime, activity_kind: str = "MATH") -> SessionRow:
         row = SessionRow(
             started_at=now,
             data_source=source,
@@ -24,6 +24,7 @@ class SessionRepository:
             consent_storage=consent,
             device_model=device_model,
             test_mode=test_mode,
+            activity_kind=activity_kind,
         )
         self.db.add(row)
         self.db.flush()

@@ -6,6 +6,7 @@ export const PHASE_COLOR: Record<PhaseKind, string> = {
   BASELINE: 'var(--phase-baseline)',
   MATH: 'var(--phase-math)',
   REGULATION: 'var(--phase-reg)',
+  CODING: 'var(--phase-coding, #5b83ac)',
 };
 
 /** Etiquetas cortas, neutrales y comprensibles para voluntarios. */
@@ -13,11 +14,13 @@ export const PHASE_SHORT: Record<PhaseKind, string> = {
   BASELINE: 'Referencia inicial',
   MATH: 'Operaciones',
   REGULATION: 'Calma guiada',
+  CODING: 'Lectura de código',
 };
 
 export const MOMENT_SHORT: Record<string, string> = {
   INITIAL: 'Al inicio',
   POST_MATH: 'Tras las operaciones',
+  POST_CODING: 'Tras leer código',
   FINAL: 'Al terminar',
   OTHER: 'Otro momento',
 };

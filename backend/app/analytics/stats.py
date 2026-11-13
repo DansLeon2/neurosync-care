@@ -122,7 +122,7 @@ def math_stats(answers: list[CognitiveAnswerRow]) -> MathStats | None:
 
 def self_report_summaries(rows: list[SelfReportRow]) -> list[SelfReportSummary]:
     return [
-        SelfReportSummary(moment=r.moment, tension=r.tension, difficulty=r.difficulty, comfort=r.comfort, timestamp=r.timestamp)  # type: ignore[arg-type]
+        SelfReportSummary(moment=r.moment, tension=r.tension, difficulty=r.difficulty, comfort=r.comfort, effort=r.effort, timestamp=r.timestamp)  # type: ignore[arg-type]
         for r in rows
     ]
 
@@ -135,6 +135,8 @@ def tension_changes(rows: list[SelfReportRow]) -> list[TensionChange]:
     pairs = [
         (ReportMoment.INITIAL, ReportMoment.POST_MATH, "Inicial → tras actividad matemática"),
         (ReportMoment.POST_MATH, ReportMoment.FINAL, "Tras actividad matemática → final"),
+        (ReportMoment.INITIAL, ReportMoment.POST_CODING, "Inicial → tras lectura de código"),
+        (ReportMoment.POST_CODING, ReportMoment.FINAL, "Tras lectura de código → final"),
         (ReportMoment.INITIAL, ReportMoment.FINAL, "Inicial → final"),
     ]
     out = []

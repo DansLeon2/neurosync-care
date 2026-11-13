@@ -84,6 +84,8 @@ export function formatSourceLabel(source: DataSource): string {
 
 export function formatPhaseKind(kind: PhaseKind): string {
   switch (kind) {
+    case 'CODING':
+      return 'Lectura de código (NeuroCode)';
     case 'BASELINE':
       return 'Referencia Inicial (Línea Base)';
     case 'MATH':

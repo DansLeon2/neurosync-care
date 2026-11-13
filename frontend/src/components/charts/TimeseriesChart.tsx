@@ -13,7 +13,7 @@ const W = 720, H = 300, ML = 56, MR = 16, MT = 18, MB = 46;
 
 /**
  * Evolución temporal de una banda. No interpola: la línea se corta donde faltan datos
- * (valor ausente o salto temporal mayor que 2,5 ventanas), y las fases se sombrean por su phase_id.
+ * (valor ausente o salto temporal mayor que 1,5 ventanas), y las fases se sombrean por su phase_id.
  */
 export const TimeseriesChart: React.FC<Props> = ({ series, phases, band }) => {
   const [hover, setHover] = useState<number | null>(null);
@@ -31,7 +31,7 @@ export const TimeseriesChart: React.FC<Props> = ({ series, phases, band }) => {
   const y = (v: number) => MT + plotH - (v / yMax) * plotH;
 
   // Segmentos continuos de la línea
-  const maxGap = series.bin_seconds * 2.5;
+  const maxGap = series.bin_seconds * 1.5;
   let d = '';
   let prev: number | null = null;
   for (const p of pts) {

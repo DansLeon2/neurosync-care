@@ -24,6 +24,7 @@ async def stream(ws: WebSocket) -> None:
     ctx = ws.app.state.container
     await ws.accept()
     queue = ctx.hub.subscribe()
+    tasks: list[asyncio.Task] = []
     try:
         active = ctx.sessions.active()
         await ws.send_json(
@@ -54,6 +55,10 @@ async def stream(ws: WebSocket) -> None:
     except WebSocketDisconnect:
         pass
     finally:
+        for task in tasks:
+            task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
         ctx.hub.unsubscribe(queue)
         with contextlib.suppress(Exception):
             await ws.close()

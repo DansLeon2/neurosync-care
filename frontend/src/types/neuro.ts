@@ -31,10 +31,11 @@ export type SimulatorScenario =
 
 export type BandKey = 'theta' | 'alpha' | 'low_beta' | 'high_beta' | 'gamma';
 
-export type PhaseKind = 'BASELINE' | 'MATH' | 'REGULATION';
+export type ActivityKind = 'MATH' | 'CODING';
+export type PhaseKind = 'BASELINE' | 'MATH' | 'REGULATION' | 'CODING';
 export type PhaseStatus = 'ACTIVE' | 'COMPLETED' | 'ABORTED';
 export type SessionStatus = 'ACTIVE' | 'COMPLETED' | 'ABORTED';
-export type ReportMoment = 'INITIAL' | 'POST_MATH' | 'FINAL' | 'OTHER';
+export type ReportMoment = 'INITIAL' | 'POST_MATH' | 'POST_CODING' | 'FINAL' | 'OTHER';
 export type MathDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type MathOperation = 'ADD' | 'SUBTRACT' | 'MULTIPLY';
 export type AnswerResult = 'CORRECT' | 'INCORRECT' | 'SKIPPED';
@@ -114,6 +115,34 @@ export interface RealtimeFrame {
   met: Record<string, number | null> | null;
 }
 
+export interface HistoryPoint {
+  seq: number;
+  timestamp: string;
+  source: DataSource;
+  pow_unit: string | null;
+  pow: RealtimeFrame['pow'];
+  bands: Record<BandKey, number | null>;
+  channels: Record<string, number | null>;
+  overall_quality: number | null;
+}
+
+export interface ActivityDefinition {
+  id: ActivityKind; label: string; phase: PhaseKind; report_moment: ReportMoment;
+  duration_s: number; test_duration_s: number;
+}
+export interface CodingTask {
+  id: string; title: string; difficulty: string; prompt: string; code: string;
+  options: string[]; max_attempts: number; criteria: string;
+}
+export interface CodingAnswer {
+  id: number; session_id: number; phase_id: number; task_id: string; difficulty: string;
+  choice: number; correct: boolean; attempt: number; elapsed_ms: number; timestamp: string;
+}
+export interface CodingStats {
+  n_attempts: number; n_tasks: number; n_completed: number; n_incomplete: number; first_correct_ms: number | null;
+}
+export interface SelfReportExtras { difficulty?: number | null; comfort?: number | null; effort?: number | null; }
+
 export interface PhaseOut {
   id: number;
   session_id: number;
@@ -134,6 +163,7 @@ export interface SessionOut {
   consent_storage: boolean;
   device_model: string | null;
   test_mode: boolean;
+  activity_kind: ActivityKind;
   duration_s: number | null;
   phases: PhaseOut[];
 }
@@ -161,6 +191,7 @@ export interface SelfReportOut {
   tension: number;
   difficulty: number | null;
   comfort: number | null;
+  effort: number | null;
   note: string | null;
   timestamp: string;
 }
@@ -194,6 +225,7 @@ export interface SessionDetail {
   self_reports: SelfReportOut[];
   answers: CognitiveAnswerOut[];
   events: DeviceEventOut[];
+  coding_answers: CodingAnswer[];
 }
 
 export interface MathQuestionOut {
@@ -267,11 +299,13 @@ export interface SessionSummary {
   total_measurement_rows: number;
   phases: PhaseStats[];
   math: MathStats | null;
+  coding: CodingStats | null;
   self_reports: {
     moment: ReportMoment;
     tension: number;
     difficulty: number | null;
     comfort: number | null;
+    effort: number | null;
     timestamp: string;
   }[];
   tension_changes: {
@@ -329,6 +363,7 @@ export interface ProtocolPhaseDef {
 }
 
 export interface ProtocolOut {
+  activities: ActivityDefinition[];
   math: { max_questions: number; question_ttl_s: number; answer_min: number; answer_max: number };
   phases: ProtocolPhaseDef[];
   disclaimer: string;

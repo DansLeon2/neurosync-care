@@ -1,5 +1,7 @@
 # Integración con EMOTIV Cortex API v2
 
+Las instrucciones para usuarios y credenciales están en [EMOTIV_SETUP.md](EMOTIV_SETUP.md). Este documento describe el adaptador; la preparación guiada nueva no modifica los mensajes de Cortex ni habilita flujos adicionales.
+
 ## 1. Fuentes Oficiales Consultadas
 
 El adaptador `EmotivCortexSource` (`backend/app/acquisition/emotiv.py`) y su normalizador (`backend/app/acquisition/emotiv_normalizer.py`) fueron diseñados siguiendo la especificación oficial de **EMOTIV Cortex v2**:
@@ -17,7 +19,7 @@ Cuando el usuario selecciona `VIRTUAL_DEVICE` o `REAL_EMOTIV`, `EmotivCortexSour
 
 1. **Verificación TLS**: Construye un contexto SSL utilizando el certificado raíz oficial de EMOTIV almacenado en `backend/app/acquisition/certs/emotiv_rootCA.pem`.
 2. **`getCortexInfo`**: Verifica que el servicio EMOTIV Launcher / Cortex esté activo localmente.
-3. **`requestAccess`**: Solicita aprobación del usuario en EMOTIV Launcher utilizando `EMOTIV_CLIENT_ID` y `EMOTIV_CLIENT_SECRET` (leídos exclusivamente desde `backend/.env`).
+3. **`hasAccessRight` / `requestAccess`**: Comprueba o solicita aprobación en EMOTIV Launcher utilizando `EMOTIV_CLIENT_ID` y `EMOTIV_CLIENT_SECRET`, configurados en el backend. Se leen de las variables de entorno o los archivos .env admitidos por Settings; nunca se envían al frontend.
 4. **`authorize`**: Obtiene el `cortexToken` de sesión.
 5. **`queryHeadsets`**: Descubre los cascos conectados y filtra según el modo seleccionado:
    - `VIRTUAL_DEVICE`: prioriza dispositivos con `"isVirtual": true`.

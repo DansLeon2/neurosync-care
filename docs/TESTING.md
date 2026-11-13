@@ -1,5 +1,11 @@
 # Pruebas y validación
 
+## Base de comparación
+
+Antes de modificar el código: 66 pruebas pytest, build de producción y 11 comprobaciones de navegador aprobadas. Capturas originales en la carpeta local ignorada .tmp/uiqa-c470d7f6. Un intento inicial restringido de pytest falló por permisos; al ejecutar con acceso a temporales pasó completa.
+
+El equipo tiene nvm sin versión activa. Se usó un ejecutable Node instalado para la comprobación local, sin cambiar la configuración global. No es una dependencia de rutas personales dentro del proyecto.
+
 ## Backend
 
 Desde backend:
@@ -8,26 +14,26 @@ Desde backend:
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-Las pruebas usan SQLite temporal. No deben apuntar a la base de participantes.
+La suite usa bases temporales; no apunta a la base de participantes. Conserva test_api, test_simulator, test_emotiv y test_math_limits. test_evolution añade migración legacy idempotente, publicación entre hilos y snapshots, cola acotada, recuperación de escritura, creación simultánea de sesiones/fases, continuación de adquisición tras desconexión del cliente y contratos NeuroCode.
 
-- test_api.py: sesiones, consentimiento, fases, autoevaluaciones, historial, comparación y CSV.
-- test_simulator.py: señales sintéticas reproducibles, escenarios y pérdida de señal.
-- test_emotiv.py: normalización y comunicación contra Cortex simulado; no hardware físico.
-- test_math_limits.py: plazo de actividad, caducidad al responder, fase de origen, máximo de preguntas, acotación de entrada, duplicados y concurrencia local.
+Las pruebas de tiempo usan reloj inyectado para los límites. El piloto valida tarea, fase, corrección, número de intentos, esfuerzo opcional y exportación sin fabricar datos EEG.
 
-Los casos temporales nuevos usan un reloj inyectado; no requieren esperar minutos para comprobar caducidad.
+La versión instalada de Starlette/httpx produce una advertencia de deprecación de TestClient. No se reemplazó esa dependencia indirecta como parte de esta intervención.
 
 ## Frontend
 
 Desde frontend:
 
 ```powershell
+npm test
 npm run build
 ```
 
-Comprueba TypeScript y el empaquetado de Vite. No equivale a una prueba visual ni comprueba por sí mismo el flujo en un navegador.
+node:test usa el compilador TypeScript ya instalado para probar modelos puros: búfer, cortes de señal/origen/unidades, valores de sensor sin relleno y distinción de instrucciones según el modelo. No imita React para afirmar pruebas de interfaz.
 
-## Comprobación automática en navegador (Windows)
+El build verifica tipos y empaquetado. El chunk 3D supera 500 kB sin comprimir y se carga bajo demanda; no se oculta esa advertencia elevando artificialmente el límite.
+
+## Navegador real
 
 Desde la raíz, con Chrome o Edge instalado:
 
@@ -35,34 +41,30 @@ Desde la raíz, con Chrome o Edge instalado:
 .\backend\.venv\Scripts\python.exe scripts/test_browser.py
 ```
 
-El script utiliza el cliente WebSocket instalado con las dependencias del backend. Inicia backend, Vite y Chrome/Edge sin ventana, en puertos libres, con SQLite y perfil de navegador aislados dentro de .tmp/uiqa-*. Al terminar cierra los procesos que inició. No usa la base de sesiones del proyecto.
+Con --basic se ejecuta el recorrido original. Por defecto se incluyen las comprobaciones ampliadas de browser_checks.py. El ejecutable de Node puede indicarse con NEUROSYNC_NODE_BIN cuando un gestor local no tiene una versión activa.
 
-Comprueba escritorio y móvil de 375 px sin desbordamiento, consentimiento desmarcado, ausencia de respuestas iniciales inventadas, flujo guiado, Enter repetido, vencimiento de matemáticas, pausa de calma, descarte temporal, sesión guardada interrumpida y desconexión del servidor. Guarda capturas locales y falla ante excepciones de JavaScript.
+La prueba arranca Vite, backend y un perfil de navegador aislados en puertos libres, con SQLite dentro de .tmp/uiqa-*. Cierra los procesos que inició y conserva capturas y logs para revisión. Chrome usa renderizado de software en esta prueba para que 3D sea verificable sin depender de la GPU local.
 
-## Recorridos manuales
+Cobertura ampliada:
+- Escritorio y móvil de 375 px sin desbordamiento.
+- Filtros de banda, sensor, ventana y leyenda.
+- Calidad deficiente y pérdida/recuperación sin valores inventados.
+- Selección en 2D y clic real sobre un electrodo 3D, zoom, orientación y selección compartida.
+- Tema alternativo y preparación por modelo sin selección automática.
+- Fuente real bloqueada hasta completar preparación; sin confirmar hardware inexistente.
+- Navegación sin fases duplicadas; guía pausada/técnica conservadas.
+- Flujo matemático, Enter repetido, vencimiento, calma y resultado.
+- NeuroCode completo con reintento tras fallo de catálogo, esfuerzo opcional y exportación disponible.
+- Descarte temporal, historial de interrupción y desconexión del servidor.
+- WebGL indisponible: aviso y vista 2D.
+- Ausencia de excepciones JavaScript no controladas.
 
-1. Abrir sin backend: debe aparecer un error recuperable con Reintentar, no datos de relleno.
-2. Preparar una sesión: consentimiento desmarcado, duración estándar y tensión inicial opcional sin respuesta preseleccionada.
-3. Usar simulador y demostración: completar referencia, operaciones, autoevaluación, calma y evaluación final desde Mi sesión.
-4. Dejar transcurrir el tiempo matemático: entrada bloqueada, sin pregunta nueva y continuación a autoevaluación.
-5. Ronda estándar: llegar a 20 respuestas, incluidas omisiones; la fase termina.
-6. Responder con Enter repetido: una corrección por pregunta. Comprobar pregunta sin “= ?” duplicado.
-7. Intentar respuesta vacía, decimal y número de más de cuatro cifras. Omitir debe ser una acción explícita.
-8. Recargar durante operaciones: recuperar el plazo de la fase y las respuestas ya registradas.
-9. Perder conexión: borrar la última telemetría, mostrar aviso, recuperar sin fabricar señal.
-10. Durante sesión, intentar cambiar fuente o entrar a prácticas: fuente bloqueada y regreso a Mi sesión.
-11. Detener desde la cabecera: resultado interrumpido.
-12. Sin autorización de historial: ver/exportar resultado temporal, salir de Resultados y verificar que la sesión se descartó.
-13. Con autorización: reiniciar y comprobar historial, CSV e impresión.
-14. Calma: probar pausa, reanudación y alternativa de atención al entorno. La interfaz debe aclarar que el EEG continúa durante la pausa de guía.
-15. Probar móvil de 360 px y escritorio; recorrer con Tab, Escape y preferencia de movimiento reducido.
+## Comprobaciones manuales pendientes
 
-## Resultado de la revisión
+La automatización no sustituye probar el casco universitario ni observar usabilidad con participantes. Revisar colocación, higiene y adecuación por modelo con el responsable del equipo. Probar autorización/licencia reales, desconexión física, variación de contacto y confirmación de unidades.
 
-La ejecución tras los cambios completó **66 pruebas de backend**, el build de producción del frontend y **11 comprobaciones en navegador**. Se inspeccionaron capturas de escritorio, móvil, operaciones y resultados. La suite emite una advertencia de deprecación de la combinación Starlette/httpx instalada; no impide las pruebas.
+Verificar con participantes accesibilidad, textos y comodidad; validar el protocolo y el catálogo de tareas antes de investigar asociaciones. El piloto no estima productividad ni constituye un instrumento validado de estrés.
 
-## Límites
+## Resultado de esta intervención
 
-Los mocks no validan credenciales universitarias, licencias de flujos ni compatibilidad de un casco real. Las fases solo se cierran automáticamente mientras el cliente guiado está ejecutándose; la API siempre impide respuestas matemáticas tardías.
-
-El proceso debe ejecutarse con un solo worker: las preguntas pendientes y el bloqueo son locales a ese proceso.
+La ejecución final se registra en CHANGELOG.md y en el informe de entrega. Las capturas del README proceden de sesiones simuladas reales de la app; no son mockups ni validación de hardware.

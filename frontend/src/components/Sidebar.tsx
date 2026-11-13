@@ -10,11 +10,11 @@ interface Props {
 }
 const primary = [
   { id: 'dashboard', label: 'Mi sesión', icon: Activity },
+  { id: 'neuromap', label: 'Explorador cerebral', icon: Brain },
   { id: 'neuroreport', label: 'Resultados', icon: BarChart3 },
   { id: 'hardware', label: 'Dispositivo', icon: Cpu },
 ] as const;
 const advanced = [
-  { id: 'neuromap', label: 'Explorar sensores', icon: Brain },
   { id: 'neurotest', label: 'Practicar operaciones', icon: Calculator },
   { id: 'neurocalma', label: 'Practicar calma', icon: Wind },
 ] as const;

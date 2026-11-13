@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from app.schemas.enums import PhaseKind
 from app.schemas.sessions import ProtocolOut, ProtocolPhaseDef
+from app.services.activity_registry import ACTIVITIES
 
 DISCLAIMER = (
     "NeuroSync Care es una plataforma experimental de demostración. No es un dispositivo médico, "
@@ -12,6 +13,7 @@ DISCLAIMER = (
 )
 
 PROTOCOL = ProtocolOut(
+    activities=list(ACTIVITIES.values()),
     disclaimer=DISCLAIMER,
     phases=[
         ProtocolPhaseDef(
@@ -49,5 +51,8 @@ PROTOCOL = ProtocolOut(
 
 def phase_duration(kind: PhaseKind, test_mode: bool = False) -> int:
     """Duración compartida por los servicios y publicada en /api/protocol."""
+    if kind == PhaseKind.CODING:
+        activity = ACTIVITIES["CODING"]
+        return activity["test_duration_s"] if test_mode else activity["duration_s"]
     phase = next(p for p in PROTOCOL.phases if p.kind == kind)
     return phase.test_duration_s if test_mode else phase.default_duration_s

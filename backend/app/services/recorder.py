@@ -11,12 +11,15 @@ from __future__ import annotations
 
 import logging
 import math
+from threading import RLock
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from app.database.core import SessionFactory, session_scope
 from app.repositories.measurements import MeasurementRepository
 from app.schemas.samples import SampleBatch
+from app.errors import ConflictError
+from app.services.synchronization import synchronized
 
 log = logging.getLogger(__name__)
 
@@ -42,25 +45,32 @@ class MeasurementRecorder:
         self.session_id: int | None = None
         self.phase_id: int | None = None
         self.rows_written = 0
+        self._lock = RLock()
 
     @property
     def recording(self) -> bool:
         return self.session_id is not None
 
+    @synchronized
     def start(self, session_id: int) -> None:
         self.flush()
         self.session_id = session_id
         self.phase_id = None
 
+    @synchronized
     def set_phase(self, phase_id: int | None) -> None:
         self.flush()  # las ventanas abiertas pertenecen a la fase anterior
         self.phase_id = phase_id
 
+    @synchronized
     def stop(self) -> None:
         self.flush()
+        if self._bins:
+            raise ConflictError("Hay mediciones pendientes de guardar. Reintenta finalizar la sesión.")
         self.session_id = None
         self.phase_id = None
 
+    @synchronized
     def add(self, batch: SampleBatch) -> None:
         if self.session_id is None:
             return
@@ -83,6 +93,7 @@ class MeasurementRecorder:
         # Escribe las ventanas ya cerradas (anteriores a la más reciente).
         self.flush(before=newest)
 
+    @synchronized
     def flush(self, before: float | None = None) -> int:
         if self.session_id is None:
             self._bins.clear()
@@ -94,7 +105,7 @@ class MeasurementRecorder:
             return 0
         rows = []
         for key in keys:
-            b = self._bins.pop(key)
+            b = self._bins[key]
             start, _, source, stream, sensor, metric = key
             rows.append(
                 {
@@ -116,6 +127,8 @@ class MeasurementRecorder:
         try:
             with session_scope(self._factory) as db:
                 MeasurementRepository(db).bulk_insert(rows)
+            for key in keys:
+                del self._bins[key]
             self.rows_written += len(rows)
         except Exception:
             log.exception("No se pudieron guardar %d mediciones", len(rows))

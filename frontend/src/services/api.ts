@@ -1,4 +1,7 @@
 import type {
+  ActivityKind,
+  CodingTask,
+  CodingAnswer,
   DataSource,
   MathAnswerOut,
   MathDifficulty,
@@ -20,7 +23,8 @@ import type {
   TimeseriesOut,
 } from '../types/neuro';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+import { config } from './config';
+const API_BASE = config.apiBase;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -82,10 +86,10 @@ export const api = {
     request<SourceStatus>('/api/simulator/reconnect', { method: 'POST' }),
 
   // Sesiones
-  startSession: (consent_storage: boolean, test_mode: boolean) =>
+  startSession: (consent_storage: boolean, test_mode: boolean, activity_kind: ActivityKind = 'MATH') =>
     request<SessionOut>('/api/sessions', {
       method: 'POST',
-      body: JSON.stringify({ consent_storage, test_mode }),
+      body: JSON.stringify({ consent_storage, test_mode, activity_kind }),
     }),
   getActiveSession: () => request<SessionOut | null>('/api/sessions/active'),
   finishSession: (sessionId: number, status: 'COMPLETED' | 'ABORTED' = 'COMPLETED') =>
@@ -142,6 +146,7 @@ export const api = {
       tension: number;
       difficulty?: number | null;
       comfort?: number | null;
+      effort?: number | null;
       note?: string | null;
       phase_id?: number | null;
     }
@@ -163,9 +168,13 @@ export const api = {
       body: JSON.stringify({ question_id, answer }),
     }),
 
+  getCodingTasks: () => request<CodingTask[]>('/api/coding/tasks'),
+  submitCodingAnswer: (session_id: number, task_id: string, choice: number) => request<CodingAnswer>('/api/coding/answers', {
+    method: 'POST', body: JSON.stringify({ session_id, task_id, choice }),
+  }),
   getExportUrl: (
     sessionId: number,
-    dataset: 'measurements' | 'answers' | 'self_reports' | 'summary'
+    dataset: 'measurements' | 'answers' | 'self_reports' | 'summary' | 'coding'
   ) => `${API_BASE}/api/sessions/${sessionId}/export.csv?dataset=${dataset}`,
 };
 

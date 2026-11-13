@@ -6,9 +6,11 @@ from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+from app.schemas.coding import CodingAnswerOut
 
 from app.schemas.enums import (
     AnswerResult,
+    ActivityKind,
     DataSource,
     MathDifficulty,
     MathOperation,
@@ -20,6 +22,7 @@ from app.schemas.enums import (
 
 
 class SessionCreate(BaseModel):
+    activity_kind: ActivityKind = ActivityKind.MATH
     consent_storage: bool = Field(
         default=False,
         description="True = el participante autoriza guardar los resultados localmente. "
@@ -66,6 +69,7 @@ class SessionOut(BaseModel):
     consent_storage: bool
     device_model: str | None
     test_mode: bool
+    activity_kind: ActivityKind = ActivityKind.MATH
     duration_s: float | None = None
     phases: list[PhaseOut] = Field(default_factory=list)
 
@@ -90,6 +94,7 @@ class SelfReportCreate(BaseModel):
     tension: int = Field(ge=0, le=10, description="¿Cuánta tensión percibes? 0 = ninguna, 10 = máxima.")
     difficulty: int | None = Field(default=None, ge=0, le=10)
     comfort: int | None = Field(default=None, ge=0, le=10)
+    effort: int | None = Field(default=None, ge=0, le=10)
     note: str | None = Field(default=None, max_length=300)
     phase_id: int | None = None
 
@@ -104,6 +109,7 @@ class SelfReportOut(BaseModel):
     tension: int
     difficulty: int | None
     comfort: int | None
+    effort: int | None = None
     note: str | None
     timestamp: datetime
 
@@ -172,6 +178,7 @@ class SessionDetail(BaseModel):
     self_reports: list[SelfReportOut]
     answers: list[CognitiveAnswerOut]
     events: list[DeviceEventOut]
+    coding_answers: list[CodingAnswerOut] = Field(default_factory=list)
 
 
 class ProtocolPhaseDef(BaseModel):
@@ -190,8 +197,18 @@ class MathPolicy(BaseModel):
     answer_max: int = 9999
 
 
+class ActivityDefinition(BaseModel):
+    id: ActivityKind
+    label: str
+    phase: PhaseKind
+    report_moment: ReportMoment
+    duration_s: int
+    test_duration_s: int
+
+
 class ProtocolOut(BaseModel):
     math: MathPolicy = Field(default_factory=MathPolicy)
     phases: list[ProtocolPhaseDef]
     disclaimer: str
+    activities: list[ActivityDefinition] = Field(default_factory=list)
 

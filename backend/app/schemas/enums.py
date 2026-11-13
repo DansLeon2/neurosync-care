@@ -65,6 +65,12 @@ class PhaseKind(StrEnum):
     BASELINE = "BASELINE"  # referencia inicial
     MATH = "MATH"  # actividad cognitiva
     REGULATION = "REGULATION"  # autorregulación guiada
+    CODING = "CODING"  # piloto controlado de comprensión de código
+
+
+class ActivityKind(StrEnum):
+    MATH = "MATH"
+    CODING = "CODING"
 
 
 class PhaseStatus(StrEnum):
@@ -76,6 +82,7 @@ class PhaseStatus(StrEnum):
 class ReportMoment(StrEnum):
     INITIAL = "INITIAL"
     POST_MATH = "POST_MATH"
+    POST_CODING = "POST_CODING"
     FINAL = "FINAL"
     OTHER = "OTHER"
 

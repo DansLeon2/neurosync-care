@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 from typing import Any
+from threading import RLock
 
 from app.database.core import SessionFactory, session_scope
 from app.errors import ConflictError, NotFoundError
@@ -26,6 +27,7 @@ from app.services.hub import StreamHub
 from app.services.pipeline import Pipeline
 from app.services.protocol import phase_duration
 from app.services.recorder import MeasurementRecorder
+from app.services.synchronization import synchronized
 
 
 def session_out(row: SessionRow, now: datetime | None = None) -> SessionOut:
@@ -39,6 +41,7 @@ def session_out(row: SessionRow, now: datetime | None = None) -> SessionOut:
         consent_storage=row.consent_storage,
         device_model=row.device_model,
         test_mode=row.test_mode,
+        activity_kind=row.activity_kind,
         duration_s=round((end - row.started_at).total_seconds(), 2),
         phases=[PhaseOut.model_validate(p) for p in row.phases],
     )
@@ -60,6 +63,7 @@ class SessionService:
         self._acq = acquisition
         self._hub = hub
         self._clock = clock
+        self._lock = RLock()
 
     # ---- helpers
     def _announce(self, event: str, row: SessionRow, extra: dict[str, Any] | None = None) -> None:
@@ -82,6 +86,7 @@ class SessionService:
         return row
 
     # ---- sesiones
+    @synchronized
     def start(self, req: SessionCreate) -> SessionOut:
         with session_scope(self._factory) as db:
             repo = SessionRepository(db)
@@ -94,6 +99,7 @@ class SessionService:
                 consent=req.consent_storage,
                 device_model=status.device.model if status.device else None,
                 test_mode=req.test_mode,
+                activity_kind=req.activity_kind.value,
                 now=self._clock(),
             )
             ActivityRepository(db).add_event(
@@ -118,6 +124,7 @@ class SessionService:
         with session_scope(self._factory) as db:
             return session_out(self._get(SessionRepository(db), session_id))
 
+    @synchronized
     def finish(self, session_id: int, status: SessionStatus) -> SessionOut:
         # Se vacían las ventanas pendientes ANTES de abrir la transacción (SQLite admite un solo escritor).
         if self._recorder.session_id == session_id:
@@ -140,6 +147,7 @@ class SessionService:
         self._announce("finished", self._reload(session_id))
         return out
 
+    @synchronized
     def delete(self, session_id: int) -> None:
         with session_scope(self._factory) as db:
             repo = SessionRepository(db)
@@ -148,11 +156,13 @@ class SessionService:
                 raise ConflictError("No se puede borrar una sesión activa. Finalízala primero.")
             repo.delete(session_id)
 
+    @synchronized
     def delete_all(self) -> int:
         with session_scope(self._factory) as db:
             return SessionRepository(db).delete_all()
 
     # ---- fases
+    @synchronized
     def start_phase(self, session_id: int, req: PhaseCreate) -> PhaseOut:
         with session_scope(self._factory) as db:
             repo = SessionRepository(db)
@@ -164,6 +174,12 @@ class SessionService:
             duration = req.planned_duration_s or phase_duration(req.kind, session.test_mode)
             if req.kind == PhaseKind.MATH and duration > phase_duration(PhaseKind.MATH):
                 raise ConflictError(f"La fase matemática admite como máximo {phase_duration(PhaseKind.MATH)} segundos.")
+            if req.kind == PhaseKind.CODING:
+                from app.services.coding_service import tasks
+                if req.detail not in {task.id for task in tasks()}:
+                    raise ConflictError("Selecciona una tarea de código válida antes de iniciar la fase.")
+                if duration > phase_duration(PhaseKind.CODING):
+                    raise ConflictError("La fase de código admite como máximo 120 segundos.")
             phase = repo.add_phase(session_id, kind=req.kind.value, detail=req.detail, planned=duration, now=now)
             out = PhaseOut.model_validate(phase)
         self._recorder.set_phase(out.id)
@@ -171,6 +187,7 @@ class SessionService:
         self._announce("phase_started", self._reload(session_id), {"phase": out.model_dump(mode="json")})
         return out
 
+    @synchronized
     def end_phase(self, session_id: int, phase_id: int, status: PhaseStatus) -> PhaseOut:
         with session_scope(self._factory) as db:
             repo = SessionRepository(db)
@@ -188,6 +205,7 @@ class SessionService:
         return out
 
     # ---- autoevaluaciones
+    @synchronized
     def add_self_report(self, session_id: int, req: SelfReportCreate) -> SelfReportOut:
         with session_scope(self._factory) as db:
             repo = SessionRepository(db)
@@ -202,7 +220,7 @@ class SessionService:
                 phase_id = active.id if active else None
             row = ActivityRepository(db).add_self_report(
                 session_id=session_id, phase_id=phase_id, moment=req.moment.value, tension=req.tension,
-                difficulty=req.difficulty, comfort=req.comfort, note=req.note, timestamp=self._clock(),
+                difficulty=req.difficulty, comfort=req.comfort, effort=req.effort, note=req.note, timestamp=self._clock(),
             )
             return SelfReportOut.model_validate(row)
 

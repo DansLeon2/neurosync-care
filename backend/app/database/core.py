@@ -57,6 +57,8 @@ def init_db(engine: Engine) -> None:
     from app.models import tables  # noqa: F401  (registra los modelos)
 
     Base.metadata.create_all(engine)
+    from app.database.migrations import migrate
+    migrate(engine)
 
 
 @contextmanager

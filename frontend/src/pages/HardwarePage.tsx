@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import type { DataSource, RealtimeFrame, SensorLayout, SessionOut, SimulatorConfig, SimulatorScenario, SourceStatus } from '../types/neuro';
 import { formatSourceLabel } from '../utils/format';
-interface Props { status: SourceStatus; frame: RealtimeFrame | null; layout: SensorLayout | null; activeSession: SessionOut | null; onRefreshState: () => Promise<void>; }
-export const HardwarePage: React.FC<Props> = ({ status, frame, layout, activeSession, onRefreshState }) => {
+import { useTelemetry } from '../features/telemetry/useTelemetry';
+import { DevicePreparation } from '../features/session/DevicePreparation';
+interface Props { status: SourceStatus; layout: SensorLayout | null; activeSession: SessionOut | null; onRefreshState: () => Promise<void>; }
+export const HardwarePage: React.FC<Props> = ({ status, layout, activeSession, onRefreshState }) => {
+  const { frame } = useTelemetry();
   const [config, setConfig] = useState<SimulatorConfig | null>(null);
   const [scenarios, setScenarios] = useState<{ id: SimulatorScenario; description: string }[]>([]);
   const [busy, setBusy] = useState(false);
@@ -40,6 +43,7 @@ export const HardwarePage: React.FC<Props> = ({ status, frame, layout, activeSes
       <p>{status.message}</p>
       <button className="text-button" disabled={busy || Boolean(activeSession) || status.source === 'DISCONNECTED'} onClick={() => void action(async () => { await api.selectSource('DISCONNECTED'); })}>Desconectar fuente</button>
     </section>
+    <details className="panel technical-details"><summary>Cómo colocar el EMOTIV · revisar preparación</summary><DevicePreparation source={status.source === 'VIRTUAL_DEVICE' ? 'VIRTUAL_DEVICE' : 'REAL_EMOTIV'} status={status} disabled={Boolean(activeSession)} onConnect={async () => { await api.selectSource(status.source === 'VIRTUAL_DEVICE' ? 'VIRTUAL_DEVICE' : 'REAL_EMOTIV'); await onRefreshState(); }} /></details>
     <details className="panel technical-details"><summary>Opciones del simulador y diagnóstico</summary>
       {config ? <fieldset disabled={busy || Boolean(activeSession)}><label className="field-label">Escenario<select value={config.scenario} onChange={event => setConfig({ ...config, scenario: event.target.value as SimulatorScenario })}>{scenarios.map(scenario => <option key={scenario.id} value={scenario.id}>{scenario.description}</option>)}</select></label>
         <label className="field-label">Semilla reproducible<input type="number" value={config.seed} onChange={event => setConfig({ ...config, seed: Number(event.target.value) })} /></label>

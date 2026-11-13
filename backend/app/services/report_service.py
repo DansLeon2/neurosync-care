@@ -26,8 +26,10 @@ from app.schemas.sessions import (
     SessionListItem,
 )
 from app.services.session_service import session_out
+from app.services.coding_service import coding_rows, coding_stats
+from app.schemas.coding import CodingAnswerOut
 
-EXPORT_DATASETS = ("measurements", "answers", "self_reports", "summary")
+EXPORT_DATASETS = ("measurements", "answers", "self_reports", "summary", "coding")
 
 
 class ReportService:
@@ -71,6 +73,7 @@ class ReportService:
                 session=session_out(row),
                 self_reports=[SelfReportOut.model_validate(r) for r in act.self_reports(session_id)],
                 answers=[CognitiveAnswerOut.model_validate(a) for a in act.answers(session_id)],
+                coding_answers=[CodingAnswerOut.model_validate(a) for a in coding_rows(db, session_id)],
                 events=[DeviceEventOut.model_validate(e) for e in act.events(session_id)],
             )
 
@@ -104,6 +107,7 @@ class ReportService:
                 total_measurement_rows=int(len(df)),
                 phases=phases,
                 math=stats.math_stats(answers),
+                coding=coding_stats(coding_rows(db, session_id), sum(p.kind == PhaseKind.CODING for p in row.phases)),
                 self_reports=stats.self_report_summaries(reports),
                 tension_changes=stats.tension_changes(reports),
                 events_count=len(events),
@@ -162,11 +166,15 @@ class ReportService:
                     w.writerow([session_id, a.phase_id or "", a.question_id, a.question_text, a.operation, a.difficulty,
                                 "" if a.given_answer is None else a.given_answer, a.expected_answer, a.result,
                                 a.response_time_ms, a.timestamp.isoformat()])
+            elif dataset == "coding":
+                w.writerow(["session_id", "phase_id", "task_id", "difficulty", "choice", "correct", "attempt", "elapsed_from_phase_ms", "timestamp_utc"])
+                for a in coding_rows(db, session_id):
+                    w.writerow([session_id, a.phase_id, a.task_id, a.difficulty, a.choice, int(a.correct), a.attempt, a.elapsed_ms, a.timestamp.isoformat()])
             elif dataset == "self_reports":
-                w.writerow(["session_id", "phase_id", "moment", "tension_0_10", "difficulty_0_10", "comfort_0_10", "note", "timestamp_utc"])
+                w.writerow(["session_id", "phase_id", "moment", "tension_0_10", "difficulty_0_10", "comfort_0_10", "note", "timestamp_utc", "effort_0_10"])
                 for r in ActivityRepository(db).self_reports(session_id):
                     w.writerow([session_id, r.phase_id or "", r.moment, r.tension, "" if r.difficulty is None else r.difficulty,
-                                "" if r.comfort is None else r.comfort, r.note or "", r.timestamp.isoformat()])
+                                "" if r.comfort is None else r.comfort, r.note or "", r.timestamp.isoformat(), "" if r.effort is None else r.effort])
         if dataset == "summary":
             summary = self.summary(session_id)
             w.writerow(["session_id", "phase_id", "phase_kind", "band", "mean", "std", "min", "max", "n_valid_samples",

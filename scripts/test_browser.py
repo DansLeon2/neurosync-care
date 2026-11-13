@@ -1,10 +1,12 @@
 """Local browser QA. Starts isolated services and closes every spawned process."""
 import base64
 import json
+import math
 import os
 from pathlib import Path
 import shutil
 import socket
+import sys
 import subprocess
 import time
 import urllib.request
@@ -19,6 +21,8 @@ OUT.mkdir(parents=True)
 processes = []
 handles = []
 errors = []
+checks = ["desktop", "mobile-375", "modal-defaults", "guided-flow", "double-enter", "math-deadline", "calm-pause", "temporary-discard", "saved-interruption", "server-disconnect", "no-runtime-exceptions"]
+extended = '--basic' not in sys.argv
 def port():
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
@@ -26,6 +30,10 @@ def port():
 backend_port, frontend_port, debug_port = port(), port(), port()
 def get(url):
     with urllib.request.urlopen(url, timeout=3) as response:
+        return json.load(response)
+def post(url, payload, method='POST'):
+    request = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={'Content-Type':'application/json'}, method=method)
+    with urllib.request.urlopen(request, timeout=5) as response:
         return json.load(response)
 def wait_http(url):
     end = time.monotonic() + 25
@@ -51,7 +59,7 @@ try:
     backend = launch([str(ROOT / "backend/.venv/Scripts/python.exe"), "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", str(backend_port)], ROOT / "backend", env)
     env["VITE_API_BASE"] = "http://127.0.0.1:" + str(backend_port)
     env["VITE_WS_URL"] = "ws://127.0.0.1:" + str(backend_port) + "/ws/stream"
-    launch([shutil.which("node"), str(ROOT / "frontend/node_modules/vite/bin/vite.js"), "--host", "127.0.0.1", "--port", str(frontend_port), "--strictPort"], ROOT / "frontend", env)
+    launch([os.environ.get("NEUROSYNC_NODE_BIN") or shutil.which("node"), str(ROOT / "frontend/node_modules/vite/bin/vite.js"), "--host", "127.0.0.1", "--port", str(frontend_port), "--strictPort"], ROOT / "frontend", env)
     api = "http://127.0.0.1:" + str(backend_port)
     site = "http://127.0.0.1:" + str(frontend_port)
     wait_http(api + "/api/health")
@@ -59,7 +67,7 @@ try:
     chrome = Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
     if not chrome.exists():
         chrome = Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
-    launch([str(chrome), "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", "--remote-debugging-port=" + str(debug_port), "--remote-allow-origins=http://localhost:" + str(debug_port), "--user-data-dir=" + str(OUT / "browser"), "about:blank"], ROOT)
+    launch([str(chrome), "--headless=new", "--enable-unsafe-swiftshader", "--no-first-run", "--no-default-browser-check", "--remote-debugging-port=" + str(debug_port), "--remote-allow-origins=http://localhost:" + str(debug_port), "--user-data-dir=" + str(OUT / "browser"), "about:blank"], ROOT)
     debug = "http://127.0.0.1:" + str(debug_port)
     wait_http(debug + "/json/version")
     target = next(item for item in get(debug + "/json") if item["type"] == "page")
@@ -88,9 +96,9 @@ try:
                 time.sleep(.12)
             raise AssertionError("Timed out: " + expression + "\n" + str(evaluate("document.body.innerText")))
         def text_contains(value):
-            return "document.body.textContent.includes(" + json.dumps(value) + ")"
+            return "[...document.querySelectorAll('h1,h2,h3,p,span,button,legend,small')].some(item => item.checkVisibility() && item.textContent.includes(" + json.dumps(value) + "))"
         def click(value):
-            expression = "(() => { const button = [...document.querySelectorAll('button')].find(item => item.textContent.trim().includes(" + json.dumps(value) + ") && !item.disabled); if (!button) throw new Error('Button missing'); button.click(); return true; })()"
+            expression = "(() => { const button = [...document.querySelectorAll('button')].find(item => item.checkVisibility() && item.textContent.trim().includes(" + json.dumps(value) + ") && !item.disabled); if (!button) throw new Error('Button missing: ' + " + json.dumps(value) + "); button.click(); return true; })()"
             return evaluate(expression)
         def screenshot(name):
             result = call("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False})
@@ -105,6 +113,9 @@ try:
         call("Emulation.setDeviceMetricsOverride", {"width": 375, "height": 900, "deviceScaleFactor": 1, "mobile": True})
         assert evaluate("document.documentElement.scrollWidth <= innerWidth"), "Mobile overflow"
         screenshot("mobile.png")
+        if extended:
+            import browser_checks
+            checks.extend(browser_checks.explorer(evaluate, call, wait, click, screenshot, get, post, api, text_contains))
         click("Nueva sesión")
         wait("document.querySelector('dialog').open")
         assert evaluate("[...document.querySelectorAll('dialog input[type=checkbox]')].every(item => !item.checked)"), "Preselected consent or quick mode"
@@ -135,6 +146,8 @@ try:
         wait(text_contains("Correcto."))
         assert len(get(api + "/api/sessions/" + str(sid))["answers"]) == 1
         screenshot("math.png")
+        if extended:
+            checks.extend(browser_checks.navigation(evaluate, click, wait, get, api, sid))
         wait(text_contains("¿Cuánta tensión percibes ahora?"), 16)
         assert evaluate("document.querySelector('#math-answer') === null"), "Math did not close at deadline"
         evaluate("document.querySelectorAll('.rating button')[3].click()")
@@ -144,6 +157,8 @@ try:
         wait(text_contains("Pausar guía"))
         click("Pausar guía")
         wait(text_contains("el registro EEG de esta fase continúa"))
+        if extended:
+            checks.extend(browser_checks.pause_navigation(evaluate, click, wait, text_contains))
         click("Continuar guía")
         click("Terminar y continuar")
         wait(text_contains("Antes de ver tus resultados"))
@@ -174,11 +189,14 @@ try:
         wait(text_contains("Sesión interrumpida"))
         saved = get(api + "/api/sessions")
         assert len(saved) == 1 and saved[0]["status"] == "ABORTED"
+        if extended:
+            checks.extend(browser_checks.coding(evaluate, call, wait, click, screenshot, get, api, text_contains))
+            checks.extend(browser_checks.fallback(evaluate, call, wait, click, screenshot, text_contains))
         backend.terminate()
         backend.wait(timeout=5)
         wait(text_contains("Sin conexión al servidor"))
         assert not errors, errors
-        print(json.dumps({"result": "passed", "checks": ["desktop", "mobile-375", "modal-defaults", "guided-flow", "double-enter", "math-deadline", "calm-pause", "temporary-discard", "saved-interruption", "server-disconnect", "no-runtime-exceptions"], "screenshots": str(OUT)}, ensure_ascii=False), flush=True)
+        print(json.dumps({"result": "passed", "checks": checks, "screenshots": str(OUT)}, ensure_ascii=False), flush=True)
 finally:
     for child in reversed(processes):
         if child.poll() is None:

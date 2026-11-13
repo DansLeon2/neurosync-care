@@ -1,35 +1,51 @@
 # NeuroSync Care
 
-Plataforma experimental local para observar potencia EEG, realizar una actividad aritmética y practicar una pausa guiada. No realiza diagnósticos ni identifica emociones.
+Laboratorio interactivo local para visualizar indicadores EEG durante actividades cognitivas y ejercicios de autorregulación. Proyecto universitario de Biomedicina e Ingeniería de Software en Ecuador.
 
-## El recorrido en una frase
+**Preparar → Actividad → Calma → Resultados.** El recorrido original se conserva. Puedes practicar operaciones o explorar el piloto de lectura de código, observar potencia por bandas y consultar un informe descriptivo.
 
-**Preparar → Actividad → Calma → Resultados.**
+![Experiencia con actividad y telemetría](docs/screenshots/session.png)
 
-1. En **Mi sesión**, elige simulador o EMOTIV, decide si guardar la sesión y, opcionalmente, indica tu tensión inicial.
-2. La referencia inicial comienza al preparar la sesión. Al terminar, pulsa **Comenzar operaciones** y elige dificultad.
-3. Resuelve hasta **20 operaciones o 120 segundos**, lo que ocurra primero. Puedes omitir o terminar antes. Registra después tu tensión percibida.
-4. Comienza la pausa de calma: respiración 4–6, 4–4 o atención al entorno. Puedes pausar la guía o terminar antes.
-5. Registra tu tensión final y consulta el resumen. Las comparaciones técnicas y las exportaciones están en Resultados.
+## Qué incluye
 
-La modalidad de demostración usa 8 s de referencia, 8 s de operaciones y 10 s de calma. La duración estándar es de 2 + 2 + 3 minutos, más el tiempo de responder y continuar. Las definiciones se publican en `GET /api/protocol`.
+- Simulador sin hardware, reproducible y claramente identificado.
+- Adaptador EMOTIV Cortex para potencia, calidad EEG y estado/contacto.
+- Gráficas con banda, sensor, ventana temporal, leyenda y lectura por instante, sin rellenar huecos.
+- Explorador 2D y 3D con el mismo inspector; giro, zoom, selección y alternativa 2D sin WebGL.
+- Preparación EMOTIV por modelo dentro de una nueva sesión, con calidad recibida y revisiones manuales diferenciadas.
+- Matemáticas acotadas y guías de calma 4–6, 4–4 o atención al entorno.
+- Piloto NeuroCode: comprensión/detección de errores mediante opciones, sin ejecutar código del participante.
+- Informes, historial autorizado, CSV e impresión. Tema claro y oscuro.
 
-**Detener sesión** produce un resultado interrumpido (`ABORTED`), no una sesión completada.
+![Explorador ilustrativo 3D](docs/screenshots/explorer.png)
 
-## Navegación
+El mapa muestra sensores sobre posiciones aproximadas del cuero cabelludo. La geometría interior es ilustrativa; no es anatomía individual ni localización de actividad cortical. NeuroSync Care no realiza diagnósticos ni convierte bandas EEG en porcentajes clínicos de estrés.
 
-- **Mi sesión:** recorrido guiado en una sola pantalla.
-- **Resultados:** resumen, historial autorizado, comparación de fases, CSV e impresión.
-- **Dispositivo:** conexión, estado y ajustes técnicos plegados.
-- **Herramientas:** sensores y prácticas independientes sin registro. Durante una sesión, las actividades se realizan desde Mi sesión.
+## Tecnologías y arquitectura
 
-Las gráficas muestran potencia por banda recibida, no una onda EEG cruda ni una FFT calculada por esta aplicación. Los datos ausentes se muestran como ausentes. El simulador siempre se identifica como tal.
+| Capa | Tecnología |
+| --- | --- |
+| Backend local | Python, FastAPI, SQLAlchemy ORM, SQLite |
+| Señal y análisis | Simulador / Cortex, NumPy, Pandas |
+| Interfaz | React 18, TypeScript, Vite, Tailwind y SVG |
+| Vista 3D opcional | Three.js, geometría propia cargada bajo demanda |
+| Pruebas | pytest, node:test y recorrido Chrome/Edge aislado |
 
-## Ejecutar en Windows
+```mermaid
+flowchart LR
+    F["Simulador / Cortex"] --> P["Normalización y Pipeline"]
+    P --> R["Ventanas de medición → SQLite"]
+    P --> W["Un WebSocket → búfer visual acotado"]
+    W --> V["Actividad + gráficas + explorador 2D/3D"]
+    R --> A["API de sesiones e informes"]
+    A --> V
+```
 
-Requisitos: Python 3.11 o posterior compatible con las dependencias, Node.js y npm. Ejecuta estos comandos desde la raíz.
+## Instalación en Windows PowerShell
 
-Preparación del backend:
+Requisitos: Python 3.11/3.12 y Node.js con npm (comprobado con Python 3.12 y Node 24). Internet para instalar dependencias; el simulador no necesita credenciales ni licencia EMOTIV. Si utilizas un gestor de Node, activa una versión instalada antes de ejecutar npm.
+
+Desde la raíz del repositorio:
 
 ```powershell
 cd backend
@@ -37,34 +53,38 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Terminal 1:
+En otra terminal desde la raíz:
+
+```powershell
+cd frontend
+npm ci
+```
+
+No copies entornos .venv o node_modules de otro equipo. Cada integrante debe instalarlos localmente.
+
+## Ejecutar
+
+Terminal 1, desde la raíz:
 
 ```powershell
 cd backend
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Terminal 2 (la primera vez, ejecuta `npm ci`):
+Terminal 2, desde la raíz:
 
 ```powershell
 cd frontend
-npm ci
 npm run dev
 ```
 
-Abre http://localhost:5173. API interactiva: http://127.0.0.1:8000/docs. Al abrir la app no se conecta automáticamente ninguna fuente; el simulador se inicia al elegirlo para una sesión o desde Dispositivo.
+Abre http://localhost:5173. API: http://127.0.0.1:8000/docs. Estado: http://127.0.0.1:8000/api/health.
 
-Para EMOTIV, copia `backend/.env.example` a `backend/.env` y configura tus credenciales. No se necesitan para el simulador. Consulta [la integración](docs/EMOTIV_INTEGRATION.md).
+Si PowerShell bloquea npm.ps1, utiliza npm.cmd con los mismos argumentos. Si solo se abre el frontend, la simulación no funcionará: también necesita el backend.
 
-## Datos y almacenamiento
+Para probar: Nueva sesión → Simulador → elegir actividad → Comenzar. La demostración rápida está en Opciones de demostración. Para equipo real, consulta [EMOTIV_SETUP](docs/EMOTIV_SETUP.md). Los secretos se configuran en backend/.env y no se publican.
 
-La aplicación es local, de un único proceso y para una sesión activa a la vez. No incluye autenticación multiusuario. Conserva la API en la interfaz local.
-
-La autorización de historial empieza desmarcada. Una sesión temporal también utiliza SQLite mientras está en curso y al mostrar su resultado; queda fuera del historial. El cliente solicita su descarte al salir de Resultados y el backend purga sesiones temporales al reiniciar. Cerrar la pestaña o perder la red puede dejar esos datos temporales en disco hasta el próximo arranque. No equivale a un modo exclusivamente en memoria.
-
-Los CSV son copias descargadas que no se eliminan al borrar la sesión. No se solicitan identificadores personales, pero las mediciones y autoevaluaciones siguen siendo datos del participante.
-
-## Verificar
+## Comprobar
 
 ```powershell
 cd backend
@@ -73,15 +93,28 @@ cd backend
 
 ```powershell
 cd frontend
+npm test
 npm run build
 ```
 
-Consulta los casos de prueba manual y los límites de verificación en [TESTING.md](docs/TESTING.md).
+Con Chrome o Edge instalado, desde la raíz:
+
+```powershell
+.\backend\.venv\Scripts\python.exe scripts/test_browser.py
+```
+
+La prueba de navegador usa procesos, puertos y SQLite aislados. [Cobertura y resultados](docs/TESTING.md).
+
+## Datos, compatibilidad y límites
+
+Las bases existentes no se recrean. Al iniciar se añaden las columnas/tablas necesarias para NeuroCode; las sesiones anteriores se conservan como MATH. Guarda una copia de tu SQLite, con el backend detenido, antes de actualizar un equipo con datos de investigación.
+
+El guardado en historial empieza desmarcado. Las sesiones temporales también usan SQLite, quedan fuera del historial y se descartan al salir de Resultados o al reiniciar el backend. Cerrar la pestaña sin conexión puede dejar esos datos hasta el siguiente arranque. Los CSV descargados son copias independientes.
+
+La API está pensada para un único proceso local y una sesión activa, sin autenticación multiusuario. El EEG crudo y las métricas afectivas no se solicitan. La integración física y los protocolos de investigación requieren validación con el equipo universitario.
+
+Los patrones del simulador son ficticios. Las estadísticas describen ventanas agregadas, no los extremos ni la desviación de muestras EEG originales. No se deducen causalidad, emociones ni competencia personal.
 
 ## Documentación
 
-- [Arquitectura y flujo](docs/ARCHITECTURE.md)
-- [Auditoría y decisiones de simplificación](docs/PROJECT_REVIEW.md)
-- [Integración EMOTIV](docs/EMOTIV_INTEGRATION.md)
-- [Límites científicos y metodológicos](docs/SCIENTIFIC_LIMITATIONS.md)
-- [Pruebas](docs/TESTING.md)
+Empieza por el [índice](docs/INDEX.md): guía de usuario, preparación EMOTIV, arquitectura, protocolo, piloto NeuroCode, limitaciones, pruebas y cambios de esta intervención.

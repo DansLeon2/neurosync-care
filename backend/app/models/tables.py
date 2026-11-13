@@ -25,6 +25,7 @@ class SessionRow(Base):
     consent_storage: Mapped[bool] = mapped_column(Boolean, default=False)
     device_model: Mapped[str | None] = mapped_column(String(40), nullable=True)
     test_mode: Mapped[bool] = mapped_column(Boolean, default=False)
+    activity_kind: Mapped[str] = mapped_column(String(16), default="MATH", server_default="MATH")
 
     phases: Mapped[list[PhaseRow]] = relationship(
         back_populates="session", cascade="all, delete-orphan", passive_deletes=True, order_by="PhaseRow.started_at"
@@ -81,6 +82,7 @@ class SelfReportRow(Base):
     tension: Mapped[int] = mapped_column(Integer)  # 0-10, subjetiva
     difficulty: Mapped[int | None] = mapped_column(Integer, nullable=True)
     comfort: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    effort: Mapped[int | None] = mapped_column(Integer, nullable=True)
     note: Mapped[str | None] = mapped_column(String(300), nullable=True)
     timestamp: Mapped[datetime] = mapped_column(UTCDateTime)
 
@@ -99,6 +101,21 @@ class CognitiveAnswerRow(Base):
     expected_answer: Mapped[int] = mapped_column(Integer)
     result: Mapped[str] = mapped_column(String(10))
     response_time_ms: Mapped[int] = mapped_column(Integer)
+    timestamp: Mapped[datetime] = mapped_column(UTCDateTime)
+
+
+class CodingAnswerRow(Base):
+    __tablename__ = "coding_answers"
+    __table_args__ = (Index("ix_coding_phase_attempt", "phase_id", "attempt", unique=True),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"), index=True)
+    phase_id: Mapped[int] = mapped_column(ForeignKey("session_phases.id", ondelete="CASCADE"))
+    task_id: Mapped[str] = mapped_column(String(40))
+    difficulty: Mapped[str] = mapped_column(String(16))
+    choice: Mapped[int] = mapped_column(Integer)
+    correct: Mapped[bool] = mapped_column(Boolean)
+    attempt: Mapped[int] = mapped_column(Integer)
+    elapsed_ms: Mapped[int] = mapped_column(Integer)
     timestamp: Mapped[datetime] = mapped_column(UTCDateTime)
 
 

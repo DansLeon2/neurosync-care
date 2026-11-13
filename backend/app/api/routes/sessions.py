@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends, Query, Response
 from app.api.deps import get_container
 from app.container import Container
 from app.schemas.analytics import PhaseComparison, SessionSummary, TimeseriesOut
+from app.schemas.coding import CodingTask, CodingAnswerRequest, CodingAnswerOut
+from app.services.coding_service import tasks
 from app.schemas.enums import PhaseStatus, SessionStatus
 from app.schemas.sessions import (
     MathAnswerOut,
@@ -102,6 +104,16 @@ def math_answer(req: MathAnswerRequest, ctx: Ctx) -> MathAnswerOut:
     return ctx.math.answer(req)
 
 
+@router.get("/coding/tasks", response_model=list[CodingTask], summary="Catálogo del piloto de lectura de código")
+def coding_tasks() -> list[CodingTask]:
+    return tasks()
+
+
+@router.post("/coding/answers", response_model=CodingAnswerOut, summary="Registra un intento del piloto de código")
+def coding_answer(req: CodingAnswerRequest, ctx: Ctx) -> CodingAnswerOut:
+    return ctx.coding.answer(req)
+
+
 # --- estadísticas
 @router.get("/sessions/{session_id}/summary", response_model=SessionSummary, summary="Resumen estadístico descriptivo")
 def session_summary(session_id: int, ctx: Ctx) -> SessionSummary:
@@ -112,8 +124,8 @@ def session_summary(session_id: int, ctx: Ctx) -> SessionSummary:
 def compare_phases(
     session_id: int,
     ctx: Ctx,
-    a: Annotated[str, Query(description="BASELINE | MATH | REGULATION o id de fase")] = "BASELINE",
-    b: Annotated[str, Query(description="BASELINE | MATH | REGULATION o id de fase")] = "MATH",
+    a: Annotated[str, Query(description="BASELINE | MATH | CODING | REGULATION o id de fase")] = "BASELINE",
+    b: Annotated[str, Query(description="BASELINE | MATH | CODING | REGULATION o id de fase")] = "MATH",
 ) -> PhaseComparison:
     return ctx.reports.compare(session_id, a, b)
 
@@ -127,7 +139,7 @@ def session_timeseries(session_id: int, ctx: Ctx) -> TimeseriesOut:
 def export_csv(
     session_id: int,
     ctx: Ctx,
-    dataset: Annotated[str, Query(description="measurements | answers | self_reports | summary")] = "measurements",
+    dataset: Annotated[str, Query(description="measurements | answers | coding | self_reports | summary")] = "measurements",
 ) -> Response:
     content = ctx.reports.export_csv(session_id, dataset)
     headers: dict[str, Any] = {"Content-Disposition": f'attachment; filename="{ctx.reports.export_filename(session_id, dataset)}"'}
