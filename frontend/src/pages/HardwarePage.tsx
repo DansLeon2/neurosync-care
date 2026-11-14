@@ -12,6 +12,7 @@ export const HardwarePage: React.FC<Props> = ({ status, layout, activeSession, o
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  useEffect(() => { setNotice(''); }, [status.source, status.integration_state]);
   useEffect(() => {
     let alive = true;
     Promise.all([api.getSimulatorConfig(), api.getSimulatorScenarios()]).then(([value, list]) => { if (alive) { setConfig(value); setScenarios(list); } })
@@ -35,7 +36,7 @@ export const HardwarePage: React.FC<Props> = ({ status, layout, activeSession, o
     {activeSession && <p className="notice">La fuente está bloqueada durante la sesión para mantener sus datos consistentes. Termina la sesión para cambiarla.</p>}
     <div className="source-options">{sources.map(source => <section className={`panel source-card ${status.source === source.id ? 'selected' : ''}`} key={source.id}>
       <h2>{source.label}</h2><p>{source.description}</p><button className="button subtle" disabled={busy || Boolean(activeSession) || status.source === source.id && status.connection === 'STREAMING'}
-        onClick={() => void action(async () => { const result = await api.selectSource(source.id); setNotice(result.message); })}>{status.source === source.id && status.connection === 'STREAMING' ? 'En uso' : 'Conectar'}</button>
+        onClick={() => void action(async () => { await api.selectSource(source.id); })}>{status.source === source.id && status.connection === 'STREAMING' ? 'En uso' : 'Conectar'}</button>
     </section>)}</div>
     <section className="panel"><div className="section-top"><h2>Estado de conexión</h2><button className="text-button" disabled={busy} onClick={() => void action(async () => {})}>Actualizar</button></div>
       <dl className="connection-list"><div><dt>Fuente</dt><dd>{formatSourceLabel(status.source)}</dd></div><div><dt>Estado</dt><dd>{status.connection === 'STREAMING' ? 'Recibiendo datos' : status.connection === 'CONNECTING' ? 'Conectando' : 'Sin señal disponible'}</dd></div>

@@ -59,8 +59,14 @@ Cobertura:
 - NeuroCode completo con recuperación del catálogo tras bloquear su petición y esfuerzo opcional.
 - Historial, interrupción, descarte temporal, desconexión del servidor y ausencia de excepciones JavaScript no controladas.
 
-## Validación pendiente
+## Primera comprobación con EPOC X físico · 13 de noviembre de 2026
 
-Cortex está probado con servidor simulado; no se ha validado con casco físico ni con Virtual Brainwear real. Comprobar autorización/licencia de la cuenta universitaria, recepción y unidades, contacto, desconexión física y comodidad de colocación usando [la guía EMOTIV](EMOTIV_SETUP.md).
+Se verificaron directamente `hasAccessRight` y `authorize` con la Cortex App básica aprobada. Cortex identificó inicialmente el casco por `usb cable`, con sensores vacíos; tras retirar el cable de carga se detectó por `dongle`.
+
+Se conectó la fuente a través de la API de la app y se comprobó por su WebSocket: `REAL_EMOTIV`, `STREAMING`, `CONNECTED_STREAMING`, `simulated=false`, 14 sensores de potencia, 70 valores disponibles en el fotograma (cinco bandas por sensor), unidad `uV^2/Hz` y calidad para 14 sensores. No se creó una sesión de participante para esta comprobación ni se guardaron credenciales o muestras en el repositorio.
+
+Esta comprobación confirma el recorrido básico en ese equipo y cuenta, no calidad científica ni estabilidad prolongada. Virtual Brainwear real, otros modelos, reconexiones físicas repetidas, comodidad de colocación y variación de contacto siguen pendientes. Para repetir la conexión, consulta [la guía EMOTIV](EMOTIV_SETUP.md).
+
+## Validación pendiente
 
 La automatización no sustituye probar accesibilidad, textos y comodidad con participantes ni validar el catálogo y protocolo de [Investigación](RESEARCH.md).

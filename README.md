@@ -107,7 +107,7 @@ La prueba de navegador usa procesos, puertos y SQLite aislados. [Cobertura y res
 
 ## Datos, compatibilidad y límites
 
-La aplicación es local, con una sesión activa y sin autenticación multiusuario. Las migraciones conservan las sesiones existentes; antes de actualizar, respalda SQLite con el backend detenido. Consulta [compatibilidad](docs/ARCHITECTURE.md) y [retención de datos y límites científicos](docs/RESEARCH.md). La conexión física sigue pendiente de validación universitaria.
+La aplicación es local, con una sesión activa y sin autenticación multiusuario. Las migraciones conservan las sesiones existentes; antes de actualizar, respalda SQLite con el backend detenido. Consulta [compatibilidad](docs/ARCHITECTURE.md) y [retención de datos y límites científicos](docs/RESEARCH.md). Se comprobó recepción con un EPOC X físico por receptor USB; el protocolo de investigación y la estabilidad prolongada siguen pendientes de validación universitaria.
 
 ## Documentación
 

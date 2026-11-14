@@ -1,5 +1,11 @@
 # Historial y auditoría
 
+## Primera recepción desde un EPOC X físico
+
+Se comprobaron autorización de la Cortex App básica y recepción de potencias/calidad por receptor USB en la app. La conexión inicial por cable de carga dejaba el casco sin sensores disponibles para adquirir. [Evidencia y alcance](TESTING.md).
+
+HardwarePage deja de conservar como aviso estático la respuesta inicial de Conectar; limpia avisos al cambiar el estado de fuente y presenta el mensaje actual recibido del backend. Esto evita seguir mostrando autorización pendiente después de aprobar en Launcher.
+
 ## Consolidación de documentación y código
 
 La documentación pasa de doce a seis archivos Markdown. El README contiene el índice y las instrucciones de instalación; cada guía conserva una responsabilidad:

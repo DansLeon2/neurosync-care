@@ -61,7 +61,11 @@ El asistente también se puede consultar desde Dispositivo. En simulación se ex
 | DEVICE_DISCONNECTED / SIGNAL_LOST | Revisar encendido, receptor y contacto; los huecos no se rellenan |
 | COMMUNICATION_ERROR | Leer el mensaje, comprobar Launcher y volver a conectar antes de iniciar sesión |
 
-No se desactiva TLS para resolver errores. La batería, los contactos y los datos no se inventan cuando faltan. La conexión física y la adecuación de estas instrucciones al equipo universitario deben validarse con el responsable del dispositivo. El adaptador se comprueba automáticamente contra Cortex simulado.
+Si Cortex devuelve `-32152` o muestra sensores vacíos, comprueba primero el tipo de conexión. Un casco puede aparecer como conectado por `usb cable` y no permitir abrir una sesión de adquisición. Retira el cable de carga del casco, deja el receptor USB conectado al PC, enciéndelo y espera conexión `dongle`; también puede usarse Bluetooth compatible. [Requisito oficial de createSession](https://emotiv.gitbook.io/cortex-api/session/createsession).
+
+El aviso inicial de aprobación no debe confundirse con el estado actual: consulta el mensaje de Estado de conexión. Cambiar `.env` requiere reiniciar el backend; aprobar una app anterior no aprueba las credenciales de otra.
+
+No se desactiva TLS para resolver errores. La batería, los contactos y los datos no se inventan cuando faltan. La adecuación de colocación e higiene debe validarse con el responsable del equipo. El primer recorrido físico verificado está registrado en [Pruebas](TESTING.md).
 
 ## Detalles del adaptador
 
